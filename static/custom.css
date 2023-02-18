@@ -30,3 +30,11 @@ pre[class*="language-"]:before,
 pre[class*="language-"]:after {
     display: none;
 }
+pre[class*="language-"]>code {
+	border-left: 0;
+	box-shadow: 0px 0px 0px 0px #dfdfdf;
+	background-image: none;
+}
+.line-numbers .line-numbers-rows {
+	border-right: 1px solid #dfdfdf;
+}
