@@ -290,6 +290,9 @@ struct PastebinConfig {
     #[structopt(long = "ui-line-numbers", help = "Display line numbers")]
     ui_line_numbers: bool,
 
+    #[structopt(long = "ui-burn", help = "Display burn option")]
+    ui_burn: bool,
+
     #[structopt(
         long = "plugins",
         help = "Enable additional functionalities (ie. prism, mermaid)",
@@ -503,6 +506,7 @@ fn get_new<'r>(
         "uri_prefix": cfg.uri_prefix,
         "ui_expiry_times": ui_expiry_times.inner(),
         "ui_expiry_default": ui_expiry_default.inner(),
+        "ui_burn": cfg.ui_burn,
         "js_imports": plugin_manager.js_imports(),
         "css_imports": plugin_manager.css_imports(),
         "js_init": plugin_manager.js_init(),
