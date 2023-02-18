@@ -63,9 +63,21 @@
                     {{/if}}
                     <select class="form-control ml-md-2 mt-2 mt-md-0" id="language-selector">
                         <option value="markup">Markup</option>
-                        <option value="css">CSS</option>
+                        <option value="text">Plain text</option>
+                        <option disabled>──────────</option>
+                        <option value="bash">Bash</option>
                         <option value="clike">C-like</option>
+                        <option value="css">CSS</option>
+                        <option value="go">Go</option>
+                        <option value="java">Java</option>
                         <option value="javascript">JavaScript</option>
+                        <option value="json">JSON</option>
+                        <option value="perl">Perl</option>
+                        <option value="php">PHP</option>
+                        <option value="python">Python</option>
+                        <option value="ruby">Ruby</option>
+                        <option value="rust">Rust</option>
+                        <option value="yaml">YAML</option>
                         <option disabled>──────────</option>
                         <option value="abap">ABAP</option>
                         <option value="actionscript">ActionScript</option>
@@ -80,7 +92,7 @@
                         <option value="aspnet">ASP.NET (C#)</option>
                         <option value="autohotkey">AutoHotkey</option>
                         <option value="autoit">AutoIt</option>
-                        <option value="bash">Bash</option>
+                        <option value="awk">Awk</option>
                         <option value="basic">BASIC</option>
                         <option value="batch">Batch</option>
                         <option value="bison">Bison</option>
@@ -112,7 +124,6 @@
                         <option value="git">Git</option>
                         <option value="glsl">GLSL</option>
                         <option value="gml">GameMaker</option>
-                        <option value="go">Go</option>
                         <option value="graphql">GraphQL</option>
                         <option value="groovy">Groovy</option>
                         <option value="haml">Haml</option>
@@ -128,9 +139,7 @@
                         <option value="ini">Ini</option>
                         <option value="io">Io</option>
                         <option value="j">J</option>
-                        <option value="java">Java</option>
                         <option value="jolie">Jolie</option>
-                        <option value="json">JSON</option>
                         <option value="julia">Julia</option>
                         <option value="keyman">Keyman</option>
                         <option value="kotlin">Kotlin</option>
@@ -161,8 +170,6 @@
                         <option value="parigp">PARI/GP</option>
                         <option value="parser">Parser</option>
                         <option value="pascal">Pascal</option>
-                        <option value="perl">Perl</option>
-                        <option value="php">PHP</option>
                         <option value="php-extras">PHP Extras</option>
                         <option value="plsql">PL/SQL</option>
                         <option value="powershell">PowerShell</option>
@@ -173,7 +180,6 @@
                         <option value="pug">Pug</option>
                         <option value="puppet">Puppet</option>
                         <option value="pure">Pure</option>
-                        <option value="python">Python</option>
                         <option value="q">Q (kdb+ database)</option>
                         <option value="qore">Qore</option>
                         <option value="r">R</option>
@@ -184,8 +190,6 @@
                         <option value="rest">reST (reStructuredText)</option>
                         <option value="rip">Rip</option>
                         <option value="roboconf">Roboconf</option>
-                        <option value="ruby">Ruby</option>
-                        <option value="rust">Rust</option>
                         <option value="sas">SAS</option>
                         <option value="sass">Sass (Sass)</option>
                         <option value="scss">Sass (Scss)</option>
@@ -214,7 +218,6 @@
                         <option value="xeora">Xeora</option>
                         <option value="xojo">Xojo (REALbasic)</option>
                         <option value="xquery">XQuery</option>
-                        <option value="yaml">YAML</option>
                     </select>
                     {{#if is_created}}
                         <a id="copy-btn" class="form-control btn btn-outline-success mt-2 mt-md-0 mb-md-0 ml-md-2 ml-sm-2" href="#">Copy</a>
