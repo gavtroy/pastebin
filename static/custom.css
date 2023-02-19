@@ -26,6 +26,12 @@ body {
 	margin: 0.5em 0px;
 }
 
+.toolbar {
+	display: none;
+}
+pre[class*="language-"] {
+	white-space: pre-wrap;
+}
 pre[class*="language-"]:before,
 pre[class*="language-"]:after {
     display: none;
