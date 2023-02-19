@@ -23,9 +23,11 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarCollapse">
                 <ul class="navbar-nav mr-auto">
-                    <li class="nav-item active">
-                        <a class="nav-link" href="{{uri_prefix}}/new">New <span class="sr-only">(current)</span></a>
-                    </li>
+                    {{#if (not is_editable)}}
+                        <li class="nav-item active">
+                            <a class="nav-link" href="{{uri_prefix}}/new">New <span class="sr-only">(current)</span></a>
+                        </li>
+                    {{/if}}
                     {{#if is_created}}
                         {{#if (not is_burned)}}
                             <li class="nav-item">
