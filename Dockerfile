@@ -8,7 +8,7 @@ COPY . .
 
 RUN cargo install --path .
 
-FROM debian:buster-slim
+FROM debian:bullseye-slim
 COPY --from=builder /usr/local/cargo/bin/pastebin /usr/local/bin/pastebin
 
 ENTRYPOINT ["pastebin"]
