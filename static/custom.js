@@ -49,6 +49,8 @@ $(document).ready(function() {
         burn: 0,
     };
 
+    window.history.replaceState(null, null, window.location.pathname);
+
     $("#language-selector").change(function() {
         if ($("#pastebin-code-block").length) {
             $('#pastebin-code-block').attr('class', 'language-' + $("#language-selector").val());
