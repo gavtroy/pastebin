@@ -116,13 +116,17 @@ $(document).ready(function() {
             type: 'POST',
             data: data,
             success: function(result) {
-                uri = uri_prefix + "/new";
-                uri = replaceUrlParam(uri, 'level', "success");
-                uri = replaceUrlParam(uri, 'glyph', "fas fa-check");
-                uri = replaceUrlParam(uri, 'msg', "The paste has been successfully created:");
-                uri = replaceUrlParam(uri, 'url', result);
+                if (state.burn) {
+                    uri = uri_prefix + "/new";
+                    uri = replaceUrlParam(uri, 'level', "success");
+                    uri = replaceUrlParam(uri, 'glyph', "fas fa-check");
+                    uri = replaceUrlParam(uri, 'msg', "The paste has been successfully created:");
+                    uri = replaceUrlParam(uri, 'url', result);
 
-                window.location.href = encodeURI(uri);
+                    window.location.href = encodeURI(uri);
+                } else {
+                    window.location.href = result;
+                }
             }
         });
     });
