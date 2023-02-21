@@ -71,7 +71,7 @@ $(document).ready(function() {
             type: 'DELETE',
             success: function(result) {
                 uri = uri_prefix + "/new";
-                uri = replaceUrlParam(uri, 'level', "info");
+                uri = replaceUrlParam(uri, 'level', "secondary");
                 uri = replaceUrlParam(uri, 'glyph', "fas fa-info-circle");
                 uri = replaceUrlParam(uri, 'msg', "The paste has been successfully removed.");
                 window.location.href = encodeURI(uri);
