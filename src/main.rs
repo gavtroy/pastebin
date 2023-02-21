@@ -457,7 +457,7 @@ fn get<'r>(
         let time = NaiveDateTime::from_timestamp(entry.expiry_timestamp() as i64, 0)
             .format("%Y-%m-%d %H:%M:%S");
         map["msg"] = json!(format!("This paste will expire on {}.", time));
-        map["level"] = json!("info");
+        map["level"] = json!("secondary");
         map["glyph"] = json!("far fa-clock");
     }
 
