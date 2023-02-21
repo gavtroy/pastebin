@@ -4,7 +4,6 @@ html {
 }
 
 body {
-  min-height: 75rem; /* Minimum navbar */
   padding-top: 3.5rem; /* Margin top by nav bar */
   padding-bottom: 3.5rem; /* Margin bottom by footer height */
 }
