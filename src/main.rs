@@ -601,6 +601,22 @@ fn get_static<'r>(
         .finalize()
 }
 
+#[get("/static/<dir>/<resource>")]
+fn get_static_subresource<'r>(
+    dir: String,
+    resource: String,
+    handlebars: State<Handlebars>,
+    plugin_manager: State<PluginManager>,
+    cfg: State<PastebinConfig>,
+) -> Response<'r> {
+    let full_resource = format!("{}/{}", dir, resource);
+    get_static(
+        full_resource,
+        handlebars,
+        plugin_manager,
+        cfg)
+}
+
 #[get("/")]
 fn index(cfg: State<PastebinConfig>) -> Redirect {
     let url = String::from(
@@ -737,7 +753,7 @@ fn rocket(pastebin_config: PastebinConfig) -> rocket::Rocket {
             } else {
                 uri_prefix.as_str()
             },
-            routes![index, create, remove, get, get_new, get_raw, get_binary, get_static],
+            routes![index, create, remove, get, get_new, get_raw, get_binary, get_static, get_static_subresource],
         )
 }
 
