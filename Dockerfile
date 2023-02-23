@@ -11,5 +11,9 @@ RUN cargo install --path .
 FROM debian:bullseye-slim
 COPY --from=builder /usr/local/cargo/bin/pastebin /usr/local/bin/pastebin
 
+RUN adduser --system --uid 820 --group pastebin
+
+USER pastebin
+
 ENTRYPOINT ["pastebin"]
 CMD ["--help"]
