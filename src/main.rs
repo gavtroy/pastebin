@@ -435,6 +435,7 @@ fn get<'r>(
         "is_created": "true",
         "pastebin_code": String::from_utf8_lossy(entry.data().unwrap()),
         "pastebin_id": id,
+        "lang": selected_lang,
         "pastebin_cls": pastebin_cls.join(" "),
         "version": VERSION,
         "uri_prefix": cfg.uri_prefix,
