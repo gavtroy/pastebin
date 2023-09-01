@@ -1,7 +1,6 @@
 FROM rustlang/rust:nightly as builder
 
-RUN apt-get update && apt-get install -y apt-utils software-properties-common lsb-release
-RUN bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
+RUN apt-get update && apt-get install -y apt-utils software-properties-common lsb-release clang
 
 WORKDIR /usr/src/pastebin
 COPY . .
