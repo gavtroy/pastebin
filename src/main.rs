@@ -6,6 +6,7 @@ extern crate rocket;
 #[macro_use]
 extern crate structopt_derive;
 extern crate chrono;
+extern crate timeago;
 extern crate flatbuffers;
 extern crate handlebars;
 extern crate nanoid;
@@ -29,6 +30,8 @@ use api_generated::api::get_root_as_entry;
 use std::io;
 use std::io::Cursor;
 use std::path::Path;
+use std::time::Duration;
+use std::time::SystemTime;
 
 use rocket::config::{Config, Environment};
 use rocket::http::{ContentType, Status};
@@ -452,9 +455,13 @@ fn get<'r>(
         map["is_burned"] = json!("true");
         map["glyph"] = json!("fa fa-fire");
     } else if entry.expiry_timestamp() != 0 {
-        let time = NaiveDateTime::from_timestamp(entry.expiry_timestamp() as i64, 0)
-            .format("%Y-%m-%d %H:%M:%S");
-        map["msg"] = json!(format!("This paste will expire on {}.", time));
+        let mut timeto = timeago::Formatter::new();
+        timeto.ago("");
+        let now_timestamp = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs();
+        let dur = Duration::from_secs(entry.expiry_timestamp() - now_timestamp);
+        let time = NaiveDateTime::from_timestamp_opt(entry.expiry_timestamp() as i64, 0).unwrap();
+        map["msg"] = json!(format!("This paste expires in about {}.", timeto.convert(dur)));
+        map["msg_title"] = json!(format!("Expires at {}", time.format("%Y-%m-%d %H:%M:%S")));
         map["level"] = json!("secondary");
         map["glyph"] = json!("far fa-clock");
     }

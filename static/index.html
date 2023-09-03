@@ -267,7 +267,7 @@
                 {{#if msg}}
                 <div class="mt-3 alert alert-{{level}} alert-dismissible fade show" role="alert">
                     {{#if glyph}}<i class="{{glyph}}"></i>{{/if}}
-                    {{#if url}}{{msg}} <a href="{{url}}">{{url}}</a>{{else}}{{msg}}{{/if}}
+                    {{#if msg_title}}<span title="{{msg_title}}"> {{/if}}{{msg}}{{#if url}} <a href="{{url}}">{{url}}</a>{{/if}}{{#if msg_title}}</span>{{/if}}
                     <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
