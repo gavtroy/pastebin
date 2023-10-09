@@ -43,3 +43,7 @@ pre[class*="language-"]>code {
 .line-numbers .line-numbers-rows {
 	border-right: 1px solid #dfdfdf;
 }
+.line-highlight {
+	z-index: 5;
+	scroll-margin-top: 200px;
+}

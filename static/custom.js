@@ -49,7 +49,7 @@ $(document).ready(function() {
         burn: 0,
     };
 
-    window.history.replaceState(null, null, window.location.pathname);
+    window.history.replaceState(null, null, window.location.pathname + window.location.hash);
 
     $("#language-selector").change(function() {
         if ($("#pastebin-code-block").length) {
