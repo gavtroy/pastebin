@@ -3,7 +3,6 @@
 
 #[macro_use]
 extern crate rocket;
-#[macro_use]
 extern crate structopt_derive;
 extern crate chrono;
 extern crate timeago;
@@ -341,6 +340,7 @@ fn get_error_response<'r>(
 
     Response::build()
         .status(status)
+        .header(ContentType::HTML)
         .sized_body(Cursor::new(content))
         .finalize()
 }
@@ -416,6 +416,7 @@ fn get<'r>(
 
             return Response::build()
                 .status(err_kind)
+                .header(ContentType::HTML)
                 .sized_body(Cursor::new(content))
                 .finalize();
         }
