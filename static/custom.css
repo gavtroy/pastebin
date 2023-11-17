@@ -40,6 +40,12 @@ pre[class*="language-"]>code {
 	box-shadow: 0px 0px 0px 0px #dfdfdf;
 	background-image: none;
 }
+pre[class*="language-"],
+pre[class*="language-"] > code {
+	font-family: 'Noto Sans Mono', monospace;
+	font-size: 13px;
+	line-height: 1.4;
+}
 .line-numbers .line-numbers-rows {
 	border-right: 1px solid #dfdfdf;
 }
