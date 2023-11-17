@@ -7,7 +7,7 @@ COPY . .
 
 RUN cargo install --path .
 
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 COPY --from=builder /usr/local/cargo/bin/pastebin /usr/local/bin/pastebin
 
 RUN adduser --system --uid 820 --group pastebin
