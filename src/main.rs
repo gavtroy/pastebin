@@ -358,7 +358,7 @@ fn create(
 ) -> Result<String, io::Error> {
     let slug_len = cfg.inner().slug_len;
     let id = nanoid!(slug_len, alphabet.inner());
-    let url = format!("{url}/{id}", url = get_url(cfg.inner()), id = id);
+    let url = format!("{url}{uri_prefix}/{id}", url = get_url(cfg.inner()), uri_prefix = cfg.uri_prefix, id = id);
 
     let mut writer: Vec<u8> = vec![];
     new_entry(
