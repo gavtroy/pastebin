@@ -72,7 +72,6 @@ body {
 pre[class*="language-"] {
 	padding-top: 0 !important;
 	outline: none;
-	white-space: pre-wrap !important;
 }
 pre[class*="language-"]:before,
 pre[class*="language-"]:after {
@@ -84,6 +83,7 @@ pre[class*="language-"]>code {
 }
 pre[class*="language-"],
 pre[class*="language-"] > code {
+	white-space: pre-wrap !important;
 	font-family: 'Noto Sans Mono', monospace !important;
 	font-size: 13px !important;
 	line-height: 1.4 !important;
