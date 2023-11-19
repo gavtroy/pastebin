@@ -41,6 +41,12 @@ body {
   background: var(--color-bg) !important;
 }
 
+@media (max-width: 767.5px) {
+  body {
+    padding-top: 6.4rem; /* Margin top by unfolded nav bar */
+  }
+}
+
 .footer {
   position: absolute;
   bottom: 0;

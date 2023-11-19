@@ -30,24 +30,21 @@
 
     <body>
         <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
-            <a class="navbar-brand" href="{{uri_prefix}}/new">PASTEBIN</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarCollapse">
-                <ul class="navbar-nav mr-3">
+            <div class="navbar-collapse">
+                <a class="navbar-brand d-none d-sm-inline" href="{{uri_prefix}}/new">PASTEBIN</a>
+                <ul class="navbar-nav mr-md-3 d-inline-flex flex-row">
                     {{#if (not is_editable)}}
-                        <li class="nav-item active">
+                        <li class="nav-item mr-3 mr-md-0">
                             <a class="nav-link" href="{{uri_prefix}}/new">New <span class="sr-only">(current)</span></a>
                         </li>
                     {{/if}}
                     {{#if is_created}}
                         {{#if (not is_burned)}}
                             <li class="nav-item">
-                              <a class="nav-link" href="#" id="remove-btn">Remove</a>
+                              <a class="nav-link mr-3 mr-md-0" href="#" id="remove-btn">Remove</a>
                             </li>
                             <li class="nav-item">
-                                 <a class="nav-link" href="{{uri_prefix}}/new?id={{pastebin_id}}&lang={{lang}}" id="clone-btn">Clone</a>
+                                 <a class="nav-link mr-3 mr-md-0" href="{{uri_prefix}}/new?id={{pastebin_id}}&lang={{lang}}" id="clone-btn">Clone</a>
                             </li>
                         {{/if}}
                     {{/if}}
@@ -79,10 +76,11 @@
                 </div>
                 {{/if}}
 
-                <div class="ml-auto d-flex mt-2 mt-md-0">
+                <div class="ml-auto d-flex mt-1 mt-md-0 mb-1 mb-md-0">
                     {{#if is_editable}}
                     <input class="form-control mr-2" id="pastebin-password" type="password" placeholder="Password (optional)" aria-label="Password (optional)">
                     {{/if}}
+                    {{#if (or is_editable is_created)}}
                     <select class="form-control mr-2" id="language-selector">
                         <option value="log">Log file</option>
                         <option value="text">Plain text</option>
@@ -248,6 +246,7 @@
                         <option value="xojo">Xojo (REALbasic)</option>
                         <option value="xquery">XQuery</option>
                     </select>
+                    {{/if}}
                     {{#if is_created}}
                     <div class="btn-group" role="group">
                         <a id="copy-btn" class="form-control btn btn-outline-info" href="#">Copy</a>
