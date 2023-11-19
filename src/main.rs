@@ -464,10 +464,8 @@ fn get<'r>(
         let now_timestamp = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs();
         let dur = Duration::from_secs(entry.expiry_timestamp() - now_timestamp);
         let time = NaiveDateTime::from_timestamp_opt(entry.expiry_timestamp() as i64, 0).unwrap();
-        map["msg"] = json!(format!("This paste expires in about {}.", timeto.convert(dur)));
-        map["msg_title"] = json!(format!("Expires at {}", time.format("%Y-%m-%d %H:%M:%S")));
-        map["level"] = json!("secondary");
-        map["glyph"] = json!("far fa-clock");
+        map["expiry"] = json!(format!("Expires in {}", timeto.convert(dur)));
+        map["expiry_title"] = json!(format!("Paste expires at {}", time.format("%Y-%m-%d %H:%M:%S")));
     }
 
     if entry.encrypted() {

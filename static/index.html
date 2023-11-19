@@ -35,7 +35,7 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarCollapse">
-                <ul class="navbar-nav mr-auto">
+                <ul class="navbar-nav mr-3">
                     {{#if (not is_editable)}}
                         <li class="nav-item active">
                             <a class="nav-link" href="{{uri_prefix}}/new">New <span class="sr-only">(current)</span></a>
@@ -72,11 +72,18 @@
                     {{/if}}
                 </ul>
 
-                <div class="form-inline">
+                {{#if expiry}}
+                <div class="badge badge-dark mr-3">
+                    <i class="far fa-clock mr-1"></i>
+                    <span title="{{expiry_title}}">{{expiry}}</span>
+                </div>
+                {{/if}}
+
+                <div class="ml-auto d-flex mt-2 mt-md-0">
                     {{#if is_editable}}
-                    <input class="form-control" id="pastebin-password" type="password" placeholder="Password (optional)" aria-label="Password (optional)">
+                    <input class="form-control mr-2" id="pastebin-password" type="password" placeholder="Password (optional)" aria-label="Password (optional)">
                     {{/if}}
-                    <select class="form-control ml-md-2 mt-2 mt-md-0" id="language-selector">
+                    <select class="form-control mr-2" id="language-selector">
                         <option value="log">Log file</option>
                         <option value="text">Plain text</option>
                         <option disabled>──────────</option>
@@ -242,14 +249,18 @@
                         <option value="xquery">XQuery</option>
                     </select>
                     {{#if is_created}}
-                        <a id="copy-btn" class="form-control btn btn-outline-success mt-2 mt-md-0 mb-md-0 ml-md-2 ml-sm-2" href="#">Copy</a>
+                    <div class="btn-group" role="group">
+                        <a id="copy-btn" class="form-control btn btn-outline-info" href="#">Copy</a>
                         {{#if (not is_burned)}}
-                            <a class="form-control btn btn-outline-success mt-2 mt-md-0 mb-md-0 ml-md-2 ml-sm-2" href="{{uri_prefix}}/raw/{{pastebin_id}}">Raw</a>
-                            <a class="form-control btn btn-outline-success mt-2 mt-md-0 mb-md-0 ml-md-2 ml-sm-2" href="{{uri_prefix}}/download/{{pastebin_id}}">Download</a>
+                            <a class="form-control btn btn-outline-info" href="{{uri_prefix}}/raw/{{pastebin_id}}">Raw</a>
+                            <a class="form-control btn btn-outline-info" href="{{uri_prefix}}/download/{{pastebin_id}}">Download</a>
                         {{/if}}
+                    </div>
                     {{/if}}
                     {{#if is_editable}}
-                        <a id="send-btn" class="form-control btn btn-outline-success mt-2 mt-md-0 mb-md-0 ml-md-2 ml-sm-2" href="#">Send</a>
+                    <div class="btn-group" role="group">
+                        <a id="send-btn" class="form-control btn btn-outline-success" href="#">Send</a>
+                    </div>
                     {{/if}}
                 </div>
             </div>
