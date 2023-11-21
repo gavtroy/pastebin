@@ -9,7 +9,7 @@ use rocksdb::{compaction_filter, DB};
 
 #[path = "api_generated.rs"]
 mod api_generated;
-use crate::api_generated::api::{finish_entry_buffer, get_root_as_entry, Entry, EntryArgs};
+use crate::api_generated::api::{finish_entry_buffer, root_as_entry, Entry, EntryArgs};
 
 #[macro_export]
 macro_rules! load_static_resources(
@@ -32,7 +32,7 @@ pub fn compaction_filter_expired_entries(
 ) -> compaction_filter::Decision {
     use compaction_filter::Decision::*;
 
-    let entry = get_root_as_entry(value);
+    let entry = root_as_entry(value).unwrap();
     let now = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .expect("time went backwards")
@@ -59,7 +59,7 @@ pub fn get_entry_data<'r>(id: &str, state: &'r State<'r, DB>) -> Result<Vec<u8>,
         Some(root) => root,
         None => return Err(io::Error::new(io::ErrorKind::NotFound, "record not found")),
     };
-    let entry = get_root_as_entry(&root);
+    let entry = root_as_entry(&root).unwrap();
 
     // check if data expired (might not be yet deleted by rocksb compaction hook)
     let now = SystemTime::now()
