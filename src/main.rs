@@ -18,7 +18,7 @@ mod formatter;
 
 #[macro_use]
 mod lib;
-use lib::{compaction_filter_expired_entries, get_entry_data, get_extension, new_entry};
+use lib::{compaction_filter_expired_entries, get_entry_data, get_extension, new_entry, have_auth_token};
 
 mod plugins;
 use plugins::plugin::{Plugin, PluginManager};
@@ -34,6 +34,7 @@ use std::time::SystemTime;
 
 use rocket::config::{Config, Environment};
 use rocket::http::{ContentType, Status};
+use rocket::http::{Cookie, Cookies};
 use rocket::response::{Redirect, Response};
 use rocket::{Data, State};
 
@@ -97,11 +98,29 @@ speculate! {
     }
 
     it "can remove paste by id" {
-        let response = client.delete("/some_id").dispatch();
+        // allow auth-token cookie to be set
+        get_data(&client, format!("/new"));
+
+        let id = insert_data(&client, "random_test_data_dont_care", "/");
+        let response = client.delete(format!("/{}", id)).dispatch();
         assert_eq!(response.status(), Status::Ok);
 
-        let response = get_data(&client, "some_id".to_string());
+        let response = get_data(&client, format!("/{}", id).to_string());
         assert_eq!(response.status(), Status::NotFound);
+    }
+
+    it "can't remove paste without cookie" {
+        // allow auth-token cookie to be set
+        get_data(&client, format!("/new"));
+
+        let id = insert_data(&client, "random_test_data_dont_care", "/");
+        let response = client.delete(format!("/{}", id))
+            .cookie(Cookie::new("auth-token", "abcdef"))
+            .dispatch();
+        assert_eq!(response.status(), Status::Unauthorized);
+
+        let response = get_data(&client, format!("/{}", id).to_string());
+        assert_eq!(response.status(), Status::Ok);
     }
 
     it "can remove non-existing paste" {
@@ -109,7 +128,7 @@ speculate! {
         assert_eq!(response.status(), Status::NotFound);
 
         let response = client.delete("/some_fake_id").dispatch();
-        assert_eq!(response.status(), Status::Ok);
+        assert_eq!(response.status(), Status::NotFound);
 
         let response = get_data(&client, "some_fake_id".to_string());
         assert_eq!(response.status(), Status::NotFound);
@@ -358,6 +377,7 @@ fn create(
     ttl: Option<u64>,
     burn: Option<bool>,
     encrypted: Option<bool>,
+    cookies: Cookies,
 ) -> Result<String, io::Error> {
     let slug_len = cfg.inner().slug_len;
     let id = nanoid!(slug_len, alphabet.inner());
@@ -365,12 +385,14 @@ fn create(
 
     let mut writer: Vec<u8> = vec![];
     new_entry(
+        &id,
         &mut writer,
         &mut paste.open(),
         lang.unwrap_or_else(|| String::from("markup")),
         ttl.unwrap_or(cfg.ttl),
         burn.unwrap_or(false),
         encrypted.unwrap_or(false),
+        cookies.get("auth-token").map(|c| c.value().to_string()),
     );
 
     state.put(id, writer).unwrap();
@@ -379,8 +401,24 @@ fn create(
 }
 
 #[delete("/<id>")]
-fn remove(id: String, state: State<DB>) -> Result<(), rocksdb::Error> {
-    state.delete(id)
+fn remove<'r>(
+    id: String,
+    state: State<DB>,
+    cookies: Cookies,
+) -> Response<'r> {
+    let root = match get_entry_data(&id, &state) {
+        Ok(x) => x,
+        Err(_) => return Response::build().status(Status::NotFound).finalize(),
+    };
+
+    if !have_auth_token(root_as_entry(&root).unwrap(), &id, cookies) {
+        return Response::build().status(Status::Unauthorized).finalize();
+    }
+
+    match state.delete(id) {
+        Ok(_) => Response::build().finalize(),
+        _ => Response::build().status(Status::InternalServerError).finalize(),
+    }
 }
 
 #[get("/<id>?<lang>")]
@@ -393,6 +431,7 @@ fn get<'r>(
     ui_expiry_times: State<'r, Vec<(String, u64)>>,
     ui_expiry_default: State<'r, String>,
     cfg: State<PastebinConfig>,
+    cookies: Cookies,
 ) -> Response<'r> {
     let resources = plugin_manager.static_resources();
     let html = String::from_utf8_lossy(resources.get("/static/index.html").unwrap()).to_string();
@@ -451,6 +490,7 @@ fn get<'r>(
         "js_imports": plugin_manager.js_imports(),
         "css_imports": plugin_manager.css_imports(),
         "js_init": plugin_manager.js_init(),
+        "can_delete": have_auth_token(entry, &id, cookies),
     });
 
     if entry.burn() {
@@ -494,6 +534,7 @@ fn get_new<'r>(
     glyph: Option<String>,
     msg: Option<String>,
     url: Option<String>,
+    mut cookies: Cookies,
 ) -> Response<'r> {
     let resources = plugin_manager.static_resources();
     let html = String::from_utf8_lossy(resources.get("/static/index.html").unwrap()).to_string();
@@ -502,6 +543,14 @@ fn get_new<'r>(
     let glyph = glyph.unwrap_or_else(|| String::from(""));
     let url = url.unwrap_or_else(|| String::from(""));
     let root: Vec<u8>;
+
+    let auth_token = match cookies.get("auth-token") {
+        Some(cookie) => cookie.value().to_string(),
+        _ => nanoid!(),
+    };
+    let mut cookie = Cookie::new("auth-token", auth_token);
+    cookie.make_permanent();
+    cookies.add(cookie);
 
     let mut map = json!({
         "is_editable": "true",

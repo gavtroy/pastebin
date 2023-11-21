@@ -36,6 +36,7 @@ impl<'a> Entry<'a> {
   pub const VT_LANG: flatbuffers::VOffsetT = 10;
   pub const VT_BURN: flatbuffers::VOffsetT = 12;
   pub const VT_ENCRYPTED: flatbuffers::VOffsetT = 14;
+  pub const VT_OWNER_HMAC: flatbuffers::VOffsetT = 16;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -49,6 +50,7 @@ impl<'a> Entry<'a> {
     let mut builder = EntryBuilder::new(_fbb);
     builder.add_expiry_timestamp(args.expiry_timestamp);
     builder.add_create_timestamp(args.create_timestamp);
+    if let Some(x) = args.owner_hmac { builder.add_owner_hmac(x); }
     if let Some(x) = args.lang { builder.add_lang(x); }
     if let Some(x) = args.data { builder.add_data(x); }
     builder.add_encrypted(args.encrypted);
@@ -99,6 +101,13 @@ impl<'a> Entry<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<bool>(Entry::VT_ENCRYPTED, Some(false)).unwrap()}
   }
+  #[inline]
+  pub fn owner_hmac(&self) -> Option<flatbuffers::Vector<'a, u8>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, u8>>>(Entry::VT_OWNER_HMAC, None)}
+  }
 }
 
 impl flatbuffers::Verifiable for Entry<'_> {
@@ -114,6 +123,7 @@ impl flatbuffers::Verifiable for Entry<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("lang", Self::VT_LANG, false)?
      .visit_field::<bool>("burn", Self::VT_BURN, false)?
      .visit_field::<bool>("encrypted", Self::VT_ENCRYPTED, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, u8>>>("owner_hmac", Self::VT_OWNER_HMAC, false)?
      .finish();
     Ok(())
   }
@@ -125,6 +135,7 @@ pub struct EntryArgs<'a> {
     pub lang: Option<flatbuffers::WIPOffset<&'a str>>,
     pub burn: bool,
     pub encrypted: bool,
+    pub owner_hmac: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, u8>>>,
 }
 impl<'a> Default for EntryArgs<'a> {
   #[inline]
@@ -136,6 +147,7 @@ impl<'a> Default for EntryArgs<'a> {
       lang: None,
       burn: false,
       encrypted: false,
+      owner_hmac: None,
     }
   }
 }
@@ -170,6 +182,10 @@ impl<'a: 'b, 'b> EntryBuilder<'a, 'b> {
     self.fbb_.push_slot::<bool>(Entry::VT_ENCRYPTED, encrypted, false);
   }
   #[inline]
+  pub fn add_owner_hmac(&mut self, owner_hmac: flatbuffers::WIPOffset<flatbuffers::Vector<'b , u8>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Entry::VT_OWNER_HMAC, owner_hmac);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> EntryBuilder<'a, 'b> {
     let start = _fbb.start_table();
     EntryBuilder {
@@ -193,6 +209,7 @@ impl core::fmt::Debug for Entry<'_> {
       ds.field("lang", &self.lang());
       ds.field("burn", &self.burn());
       ds.field("encrypted", &self.encrypted());
+      ds.field("owner_hmac", &self.owner_hmac());
       ds.finish()
   }
 }
