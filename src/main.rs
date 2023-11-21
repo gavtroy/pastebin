@@ -24,7 +24,7 @@ mod plugins;
 use plugins::plugin::{Plugin, PluginManager};
 
 mod api_generated;
-use api_generated::api::get_root_as_entry;
+use api_generated::api::root_as_entry;
 
 use std::io;
 use std::io::Cursor;
@@ -426,7 +426,7 @@ fn get<'r>(
     };
 
     // handle existing entry
-    let entry = get_root_as_entry(&root);
+    let entry = root_as_entry(&root).unwrap();
     let selected_lang = lang
         .unwrap_or_else(|| entry.lang().unwrap().to_string())
         .to_lowercase();
@@ -440,7 +440,7 @@ fn get<'r>(
 
     let mut map = json!({
         "is_created": "true",
-        "pastebin_code": String::from_utf8_lossy(entry.data().unwrap()),
+        "pastebin_code": String::from_utf8_lossy(entry.data().unwrap().bytes()),
         "pastebin_id": id,
         "lang": selected_lang,
         "pastebin_cls": pastebin_cls.join(" "),
@@ -521,13 +521,13 @@ fn get_new<'r>(
 
     if let Some(id) = id {
         root = get_entry_data(&id, &state).unwrap();
-        let entry = get_root_as_entry(&root);
+        let entry = root_as_entry(&root).unwrap();
 
         if entry.encrypted() {
             map["is_encrypted"] = json!("true");
         }
 
-        map["pastebin_code"] = json!(std::str::from_utf8(entry.data().unwrap()).unwrap());
+        map["pastebin_code"] = json!(std::str::from_utf8(entry.data().unwrap().bytes()).unwrap());
     }
 
     let content = handlebars.render_template(html.as_str(), &map).unwrap();
@@ -554,10 +554,10 @@ fn get_raw(id: String, state: State<DB>) -> Response {
         }
     };
 
-    let entry = get_root_as_entry(&root);
+    let entry = root_as_entry(&root).unwrap();
     let mut data: Vec<u8> = vec![];
 
-    io::copy(&mut entry.data().unwrap(), &mut data).unwrap();
+    io::copy(&mut entry.data().unwrap().bytes(), &mut data).unwrap();
 
     Response::build()
         .status(Status::Ok)
