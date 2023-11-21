@@ -40,9 +40,11 @@
                     {{/if}}
                     {{#if is_created}}
                         {{#if (not is_burned)}}
+                            {{#if can_delete}}
                             <li class="nav-item">
                               <a class="nav-link mr-3 mr-md-0" href="#" id="remove-btn">Remove</a>
                             </li>
+                            {{/if}}
                             <li class="nav-item">
                                  <a class="nav-link mr-3 mr-md-0" href="{{uri_prefix}}/new?id={{pastebin_id}}&lang={{lang}}" id="clone-btn">Clone</a>
                             </li>
@@ -333,7 +335,7 @@
     </div>
     {{/if}}
 
-    {{#if is_created}}
+    {{#if can_delete}}
     <div class="modal fade hide" id="deletion-modal" tabindex="-1" role="dialog" aria-labelledby="deletion-modal-label" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
             <div class="modal-content">

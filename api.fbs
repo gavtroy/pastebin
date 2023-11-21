@@ -7,6 +7,7 @@ table Entry {
   lang:string;
   burn:bool;
   encrypted:bool;
+  owner_hmac:[ubyte];
 }
 
 root_type Entry;

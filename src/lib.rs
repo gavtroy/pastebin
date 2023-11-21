@@ -5,7 +5,13 @@ use std::time::SystemTime;
 
 use flatbuffers::FlatBufferBuilder;
 use rocket::State;
+use rocket::http::Cookies;
 use rocksdb::{compaction_filter, DB};
+
+use sha2::Sha256;
+use hmac::{Hmac, Mac};
+
+type HmacSha256 = Hmac<Sha256>;
 
 #[path = "api_generated.rs"]
 mod api_generated;
@@ -81,12 +87,14 @@ pub fn get_entry_data<'r>(id: &str, state: &'r State<'r, DB>) -> Result<Vec<u8>,
 }
 
 pub fn new_entry(
+    id: &str,
     dest: &mut Vec<u8>,
     data: &mut rocket::data::DataStream,
     lang: String,
     ttl: u64,
     burn: bool,
     encrypted: bool,
+    auth_token: Option<String>,
 ) {
     let mut bldr = FlatBufferBuilder::new();
 
@@ -119,6 +127,11 @@ pub fn new_entry(
         lang: Some(bldr.create_string(&lang)),
         burn,
         encrypted,
+        owner_hmac: auth_token.and_then(|auth_token| {
+            let mut mac = HmacSha256::new_from_slice(auth_token.as_bytes()).unwrap();
+            mac.update(id.as_bytes());
+            Some(bldr.create_vector(&mac.finalize().into_bytes()[..16]))
+        }),
     };
 
     let user_offset = Entry::create(&mut bldr, &args);
@@ -126,4 +139,22 @@ pub fn new_entry(
 
     let finished_data = bldr.finished_data();
     dest.extend_from_slice(finished_data);
+}
+
+pub fn have_auth_token(
+    entry: Entry,
+    id: &str,
+    cookies: Cookies,
+) -> bool {
+    let stored_hmac = match entry.owner_hmac() {
+        Some(token) => token,
+        None => return true,
+    };
+    let auth_token = match cookies.get("auth-token") {
+        Some(cookie) => cookie.value(),
+        None => return false,
+    };
+    let mut mac = HmacSha256::new_from_slice(auth_token.as_bytes()).unwrap();
+    mac.update(id.as_bytes());
+    mac.verify_truncated_left(stored_hmac.bytes()).is_ok()
 }
