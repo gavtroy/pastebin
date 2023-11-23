@@ -11,7 +11,7 @@ extern crate handlebars;
 extern crate nanoid;
 extern crate num_cpus;
 extern crate regex;
-extern crate speculate;
+extern crate speculate2;
 extern crate structopt;
 
 mod formatter;
@@ -46,7 +46,7 @@ use nanoid::nanoid;
 use regex::Regex;
 use rocksdb::{Options, DB};
 use serde_json::json;
-use speculate::speculate;
+use speculate2::speculate;
 use structopt::StructOpt;
 
 speculate! {
