@@ -29,6 +29,7 @@ use api_generated::api::root_as_entry;
 use std::io;
 use std::io::Cursor;
 use std::path::Path;
+use std::path::PathBuf;
 use std::time::Duration;
 use std::time::SystemTime;
 
@@ -623,18 +624,19 @@ fn get_binary(id: String, state: State<DB>) -> Response {
         .finalize()
 }
 
-#[get("/static/<resource>")]
+#[get("/static/<resource..>")]
 fn get_static<'r>(
-    resource: String,
+    resource: PathBuf,
     handlebars: State<Handlebars>,
     plugin_manager: State<PluginManager>,
     cfg: State<PastebinConfig>,
 ) -> Response<'r> {
     let resources = plugin_manager.static_resources();
-    let pth = format!("/static/{}", resource);
-    let ext = get_extension(resource.as_str()).replace(".", "");
+    let pth = Path::new("/static/").join(resource);
+    let pth_str = pth.to_string_lossy();
+    let ext = get_extension(&pth_str).replace(".", "");
 
-    let content = match resources.get(pth.as_str()) {
+    let content = match resources.get(pth_str.as_ref()) {
         Some(data) => data,
         None => {
             let html =
@@ -655,22 +657,6 @@ fn get_static<'r>(
         .header(content_type)
         .sized_body(Cursor::new(content.iter()))
         .finalize()
-}
-
-#[get("/static/<dir>/<resource>")]
-fn get_static_subresource<'r>(
-    dir: String,
-    resource: String,
-    handlebars: State<Handlebars>,
-    plugin_manager: State<PluginManager>,
-    cfg: State<PastebinConfig>,
-) -> Response<'r> {
-    let full_resource = format!("{}/{}", dir, resource);
-    get_static(
-        full_resource,
-        handlebars,
-        plugin_manager,
-        cfg)
 }
 
 #[get("/")]
@@ -809,7 +795,7 @@ fn rocket(pastebin_config: PastebinConfig) -> rocket::Rocket {
             } else {
                 uri_prefix.as_str()
             },
-            routes![index, create, remove, get, get_new, get_raw, get_binary, get_static, get_static_subresource],
+            routes![index, create, remove, get, get_new, get_raw, get_binary, get_static],
         )
 }
 
