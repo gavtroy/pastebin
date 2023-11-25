@@ -5,7 +5,8 @@ use std::time::SystemTime;
 
 use flatbuffers::FlatBufferBuilder;
 use rocket::State;
-use rocket::http::Cookies;
+use rocket::http::CookieJar;
+use rocket::tokio;
 use rocksdb::{compaction_filter, DB};
 
 use sha2::Sha256;
@@ -59,7 +60,7 @@ pub fn get_extension(filename: &str) -> &str {
         .unwrap_or("")
 }
 
-pub fn get_entry_data<'r>(id: &str, state: &'r State<'r, DB>) -> Result<Vec<u8>, io::Error> {
+pub fn get_entry_data(id: &str, state: &State<DB>) -> Result<Vec<u8>, io::Error> {
     // read data from DB to Entry struct
     let root = match state.get(id).unwrap() {
         Some(root) => root,
@@ -86,10 +87,10 @@ pub fn get_entry_data<'r>(id: &str, state: &'r State<'r, DB>) -> Result<Vec<u8>,
     Ok(root)
 }
 
-pub fn new_entry(
+pub async fn new_entry(
     id: &str,
     dest: &mut Vec<u8>,
-    data: &mut rocket::data::DataStream,
+    data: &mut rocket::data::DataStream<'_>,
     lang: String,
     ttl: u64,
     burn: bool,
@@ -104,7 +105,7 @@ pub fn new_entry(
     // potential speed improvement over the create_vector:
     // https://docs.rs/flatbuffers/0.6.1/flatbuffers/struct.FlatBufferBuilder.html#method.create_vector
     let mut tmp_vec: Vec<u8> = vec![];
-    std::io::copy(data, &mut tmp_vec).unwrap();
+    tokio::io::copy(data, &mut tmp_vec).await.unwrap();
 
     bldr.start_vector::<u8>(tmp_vec.len());
     for byte in tmp_vec.iter().rev() {
@@ -144,7 +145,7 @@ pub fn new_entry(
 pub fn have_auth_token(
     entry: Entry,
     id: &str,
-    cookies: Cookies,
+    cookies: &CookieJar<'_>,
 ) -> bool {
     let stored_hmac = match entry.owner_hmac() {
         Some(token) => token,
