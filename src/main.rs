@@ -13,6 +13,7 @@ extern crate num_cpus;
 extern crate regex;
 extern crate speculate2;
 extern crate structopt;
+extern crate ubyte;
 
 mod formatter;
 
@@ -28,14 +29,15 @@ use api_generated::api::root_as_entry;
 
 use std::io;
 use std::io::Cursor;
+use std::net::IpAddr;
 use std::path::Path;
 use std::path::PathBuf;
 use std::time::Duration;
 use std::time::SystemTime;
 
-use rocket::config::{Config, Environment};
+use rocket::config::{Config, TlsConfig};
 use rocket::http::{ContentType, Status};
-use rocket::http::{Cookie, Cookies};
+use rocket::http::{Cookie, CookieJar};
 use rocket::response::{Redirect, Response};
 use rocket::{Data, State};
 
@@ -48,10 +50,11 @@ use rocksdb::{Options, DB};
 use serde_json::json;
 use speculate2::speculate;
 use structopt::StructOpt;
+use ubyte::ToByteUnit;
 
 speculate! {
     use super::rocket;
-    use rocket::local::Client;
+    use rocket::local::blocking::Client;
     use rocket::http::Status;
 
     before {
@@ -65,25 +68,25 @@ speculate! {
         let rocket = rocket(pastebin_config);
 
         // init rocket client
-        let client = Client::new(rocket).expect("invalid rocket instance");
+        let client = Client::tracked(rocket).expect("invalid rocket instance");
     }
 
     #[allow(dead_code)]
     fn insert_data<'r>(client: &'r Client, data: &str, path: &str) -> String {
-        let mut response = client.post(path)
+        let response = client.post(path)
             .body(data)
             .dispatch();
         assert_eq!(response.status(), Status::Ok);
 
         // retrieve paste ID
-        let url = response.body_string().unwrap();
+        let url = response.into_string().unwrap();
         let id = url.split('/').collect::<Vec<&str>>().last().cloned().unwrap();
 
         id.to_string()
     }
 
     #[allow(dead_code)]
-    fn get_data(client: &Client, path: String) -> rocket::local::LocalResponse {
+    fn get_data(client: &Client, path: String) -> rocket::local::blocking::LocalResponse {
         client.get(format!("/{}", path)).dispatch()
     }
 
@@ -92,10 +95,10 @@ speculate! {
         let id = insert_data(&client, "random_test_data_to_be_checked", "/");
 
         // retrieve the data via get request
-        let mut response = get_data(&client, id);
+        let response = get_data(&client, id);
         assert_eq!(response.status(), Status::Ok);
         assert_eq!(response.content_type(), Some(ContentType::HTML));
-        assert!(response.body_string().unwrap().contains("random_test_data_to_be_checked"));
+        assert!(response.into_string().unwrap().contains("random_test_data_to_be_checked"));
     }
 
     it "can remove paste by id" {
@@ -140,10 +143,10 @@ speculate! {
         let id = insert_data(&client, "random_test_data_to_be_checked", "/");
 
         // retrieve the data via get request
-        let mut response = get_data(&client, format!("raw/{}", id));
+        let response = get_data(&client, format!("raw/{}", id));
         assert_eq!(response.status(), Status::Ok);
         assert_eq!(response.content_type(), Some(ContentType::Plain));
-        assert!(response.body_string().unwrap().contains("random_test_data_to_be_checked"));
+        assert!(response.into_string().unwrap().contains("random_test_data_to_be_checked"));
     }
 
     it "can download contents" {
@@ -151,10 +154,10 @@ speculate! {
         let id = insert_data(&client, "random_test_data_to_be_checked", "/");
 
         // retrieve the data via get request
-        let mut response = get_data(&client, format!("download/{}", id));
+        let response = get_data(&client, format!("download/{}", id));
         assert_eq!(response.status(), Status::Ok);
         assert_eq!(response.content_type(), Some(ContentType::Binary));
-        assert!(response.body_string().unwrap().contains("random_test_data_to_be_checked"));
+        assert!(response.into_string().unwrap().contains("random_test_data_to_be_checked"));
     }
 
     it "can clone contents" {
@@ -162,10 +165,10 @@ speculate! {
         let id = insert_data(&client, "random_test_data_to_be_checked", "/");
 
         // retrieve the data via get request
-        let mut response = get_data(&client, format!("new?id={}", id));
+        let response = get_data(&client, format!("new?id={}", id));
         assert_eq!(response.status(), Status::Ok);
         assert_eq!(response.content_type(), Some(ContentType::HTML));
-        assert!(response.body_string().unwrap().contains("random_test_data_to_be_checked"));
+        assert!(response.into_string().unwrap().contains("random_test_data_to_be_checked"));
     }
 
     it "can't get burned paste" {
@@ -195,11 +198,11 @@ speculate! {
     }
 
     it "can get static contents" {
-        let mut response = client.get("/static/favicon.ico").dispatch();
+        let response = client.get("/static/favicon.ico").dispatch();
         let contents = std::fs::read("static/favicon.ico").unwrap();
 
         assert_eq!(response.status(), Status::Ok);
-        assert_eq!(response.body_bytes(), Some(contents));
+        assert_eq!(response.into_bytes(), Some(contents));
     }
 
     it "can cope with invalid unicode data" {
@@ -223,10 +226,10 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 struct PastebinConfig {
     #[structopt(
         long = "address",
-        help = "IP address or host to listen on",
-        default_value = "localhost"
+        help = "IP address to listen on",
+        default_value = "127.0.0.1"
     )]
-    address: String,
+    address: IpAddr,
 
     #[structopt(
         long = "port",
@@ -236,18 +239,11 @@ struct PastebinConfig {
     port: u16,
 
     #[structopt(
-        long = "environment",
-        help = "Rocket server environment",
-        default_value = "production"
-    )]
-    environment: String,
-
-    #[structopt(
         long = "workers",
         help = "Number of concurrent thread workers",
         default_value = "0"
     )]
-    workers: u16,
+    workers: usize,
 
     #[structopt(
         long = "keep-alive",
@@ -257,7 +253,7 @@ struct PastebinConfig {
     keep_alive: u32,
 
     #[structopt(long = "log", help = "Max log level", default_value = "normal")]
-    log: rocket::config::LoggingLevel,
+    log: rocket::config::LogLevel,
 
     #[structopt(
         long = "ttl",
@@ -320,6 +316,15 @@ struct PastebinConfig {
     plugins: Vec<String>,
 }
 
+/* Wrapper for quick migration from Rocket 0.4.0, in theory temporary */
+struct Responder<'r>(rocket::response::Response<'r>);
+
+impl<'r> rocket::response::Responder<'r, 'r> for Responder<'r> {
+    fn respond_to(self, _: &'r rocket::request::Request<'_>) -> rocket::response::Result<'r> {
+        Ok(self.0)
+    }
+}
+
 fn get_url(cfg: &PastebinConfig) -> String {
     let port = if vec![443, 80].contains(&cfg.port) {
         String::from("")
@@ -349,7 +354,7 @@ fn get_error_response<'r>(
     uri_prefix: String,
     html: String,
     status: Status,
-) -> Response<'r> {
+) -> Responder<'r> {
     let map = json!({
         "version": VERSION,
         "is_error": "true",
@@ -358,24 +363,26 @@ fn get_error_response<'r>(
 
     let content = handlebars.render_template(html.as_str(), &map).unwrap();
 
-    Response::build()
-        .status(status)
-        .header(ContentType::HTML)
-        .sized_body(Cursor::new(content))
-        .finalize()
+    Responder(
+        Response::build()
+            .status(status)
+            .header(ContentType::HTML)
+            .sized_body(content.len(), Cursor::new(content))
+            .finalize()
+    )
 }
 
 #[post("/?<lang>&<ttl>&<burn>&<encrypted>", data = "<paste>")]
-fn create(
-    paste: Data,
-    state: State<DB>,
-    cfg: State<PastebinConfig>,
-    alphabet: State<Vec<char>>,
+async fn create(
+    paste: Data<'_>,
+    state: &State<DB>,
+    cfg: &State<PastebinConfig>,
+    alphabet: &State<Vec<char>>,
     lang: Option<String>,
     ttl: Option<u64>,
     burn: Option<bool>,
     encrypted: Option<bool>,
-    cookies: Cookies,
+    cookies: &CookieJar<'_>,
 ) -> Result<String, io::Error> {
     let slug_len = cfg.inner().slug_len;
     let id = nanoid!(slug_len, alphabet.inner());
@@ -385,13 +392,13 @@ fn create(
     new_entry(
         &id,
         &mut writer,
-        &mut paste.open(),
+        &mut paste.open(2.megabytes()),
         lang.unwrap_or_else(|| String::from("markup")),
         ttl.unwrap_or(cfg.ttl),
         burn.unwrap_or(false),
         encrypted.unwrap_or(false),
         cookies.get("auth-token").map(|c| c.value().to_string()),
-    );
+    ).await;
 
     state.put(id, writer).unwrap();
 
@@ -400,42 +407,42 @@ fn create(
 
 #[delete("/<id>")]
 fn remove<'r>(
-    id: String,
-    state: State<DB>,
-    cookies: Cookies,
-) -> Response<'r> {
-    let root = match get_entry_data(&id, &state) {
+    id: &str,
+    state: &State<DB>,
+    cookies: &CookieJar<'_>,
+) -> Responder<'r> {
+    let root = match get_entry_data(id, &state) {
         Ok(x) => x,
-        Err(_) => return Response::build().status(Status::NotFound).finalize(),
+        Err(_) => return Responder(Response::build().status(Status::NotFound).finalize()),
     };
 
     if !have_auth_token(root_as_entry(&root).unwrap(), &id, cookies) {
-        return Response::build().status(Status::Unauthorized).finalize();
+        return Responder(Response::build().status(Status::Unauthorized).finalize());
     }
 
     match state.delete(id) {
-        Ok(_) => Response::build().finalize(),
-        _ => Response::build().status(Status::InternalServerError).finalize(),
+        Ok(_) => Responder(Response::build().finalize()),
+        _ => Responder(Response::build().status(Status::InternalServerError).finalize()),
     }
 }
 
 #[get("/<id>?<lang>")]
 fn get<'r>(
-    id: String,
-    lang: Option<String>,
-    state: State<'r, DB>,
-    handlebars: State<'r, Handlebars>,
-    plugin_manager: State<PluginManager>,
-    ui_expiry_times: State<'r, Vec<(String, u64)>>,
-    ui_expiry_default: State<'r, String>,
-    cfg: State<PastebinConfig>,
-    cookies: Cookies,
-) -> Response<'r> {
+    id: &str,
+    lang: Option<&str>,
+    state: &State<DB>,
+    handlebars: &State<Handlebars<'r>>,
+    plugin_manager: &State<PluginManager>,
+    ui_expiry_times: &State<Vec<(String, u64)>>,
+    ui_expiry_default: &State<String>,
+    cfg: &State<PastebinConfig>,
+    cookies: &CookieJar<'_>,
+) -> Responder<'r> {
     let resources = plugin_manager.static_resources();
     let html = String::from_utf8_lossy(resources.get("/static/index.html").unwrap()).to_string();
 
     // handle missing entry
-    let root = match get_entry_data(&id, &state) {
+    let root = match get_entry_data(id, &state) {
         Ok(x) => x,
         Err(e) => {
             let err_kind = match e.kind() {
@@ -454,18 +461,20 @@ fn get<'r>(
 
             let content = handlebars.render_template(html.as_str(), &map).unwrap();
 
-            return Response::build()
-                .status(err_kind)
-                .header(ContentType::HTML)
-                .sized_body(Cursor::new(content))
-                .finalize();
+            return Responder(
+                Response::build()
+                    .status(err_kind)
+                    .header(ContentType::HTML)
+                    .sized_body(content.len(), Cursor::new(content))
+                    .finalize()
+                );
         }
     };
 
     // handle existing entry
     let entry = root_as_entry(&root).unwrap();
     let selected_lang = lang
-        .unwrap_or_else(|| entry.lang().unwrap().to_string())
+        .unwrap_or_else(|| entry.lang().unwrap())
         .to_lowercase();
 
     let mut pastebin_cls = Vec::new();
@@ -512,34 +521,36 @@ fn get<'r>(
 
     let content = handlebars.render_template(html.as_str(), &map).unwrap();
 
-    Response::build()
-        .status(Status::Ok)
-        .header(ContentType::HTML)
-        .sized_body(Cursor::new(content))
-        .finalize()
+    Responder(
+        Response::build()
+            .status(Status::Ok)
+            .header(ContentType::HTML)
+            .sized_body(content.len(), Cursor::new(content))
+            .finalize()
+    )
 }
 
 #[get("/new?<id>&<level>&<msg>&<glyph>&<url>")]
 fn get_new<'r>(
-    state: State<'r, DB>,
-    handlebars: State<Handlebars>,
-    cfg: State<PastebinConfig>,
-    plugin_manager: State<PluginManager>,
-    ui_expiry_times: State<'r, Vec<(String, u64)>>,
-    ui_expiry_default: State<'r, String>,
-    id: Option<String>,
-    level: Option<String>,
-    glyph: Option<String>,
-    msg: Option<String>,
-    url: Option<String>,
-    mut cookies: Cookies,
-) -> Response<'r> {
+    state: &State<DB>,
+    handlebars: &State<Handlebars<'r>>,
+    cfg: &State<PastebinConfig>,
+    plugin_manager: &State<PluginManager>,
+    ui_expiry_times: &State<Vec<(String, u64)>>,
+    ui_expiry_default: &State<String>,
+    id: Option<&str>,
+    level: Option<&str>,
+    glyph: Option<&str>,
+    msg: Option<&str>,
+    url: Option<&str>,
+    cookies: &CookieJar<'_>,
+) -> Responder<'r> {
     let resources = plugin_manager.static_resources();
     let html = String::from_utf8_lossy(resources.get("/static/index.html").unwrap()).to_string();
-    let msg = msg.unwrap_or_else(|| String::from(""));
-    let level = level.unwrap_or_else(|| String::from("secondary"));
-    let glyph = glyph.unwrap_or_else(|| String::from(""));
-    let url = url.unwrap_or_else(|| String::from(""));
+    let msg = msg.unwrap_or("");
+    let level = level.unwrap_or("secondary");
+    let glyph = glyph.unwrap_or("");
+    let url = url.unwrap_or("");
 
     let auth_token = match cookies.get("auth-token") {
         Some(cookie) => cookie.value().to_string(),
@@ -565,7 +576,7 @@ fn get_new<'r>(
     });
 
     if let Some(id) = id {
-        let _ = get_entry_data(&id, &state).map(|root| {
+        let _ = get_entry_data(id, &state).map(|root| {
             let entry = root_as_entry(&root).unwrap();
 
             if entry.encrypted() {
@@ -578,17 +589,19 @@ fn get_new<'r>(
 
     let content = handlebars.render_template(html.as_str(), &map).unwrap();
 
-    Response::build()
-        .status(Status::Ok)
-        .header(ContentType::HTML)
-        .sized_body(Cursor::new(content))
-        .finalize()
+    Responder(
+        Response::build()
+            .status(Status::Ok)
+            .header(ContentType::HTML)
+            .sized_body(content.len(), Cursor::new(content))
+            .finalize()
+    )
 }
 
 #[get("/raw/<id>")]
-fn get_raw(id: String, state: State<DB>) -> Response {
+fn get_raw(id: &str, state: &State<DB>) -> Responder<'static> {
     // handle missing entry
-    let root = match get_entry_data(&id, &state) {
+    let root = match get_entry_data(id, &state) {
         Ok(x) => x,
         Err(e) => {
             let err_kind = match e.kind() {
@@ -596,7 +609,7 @@ fn get_raw(id: String, state: State<DB>) -> Response {
                 _ => Status::InternalServerError,
             };
 
-            return Response::build().status(err_kind).finalize();
+            return Responder(Response::build().status(err_kind).finalize());
         }
     };
 
@@ -605,28 +618,32 @@ fn get_raw(id: String, state: State<DB>) -> Response {
 
     io::copy(&mut entry.data().unwrap().bytes(), &mut data).unwrap();
 
-    Response::build()
-        .status(Status::Ok)
-        .header(ContentType::Plain)
-        .sized_body(Cursor::new(data))
-        .finalize()
+    Responder(
+        Response::build()
+            .status(Status::Ok)
+            .header(ContentType::Plain)
+            .sized_body(data.len(), Cursor::new(data))
+            .finalize()
+    )
 }
 
 #[get("/download/<id>")]
-fn get_binary(id: String, state: State<DB>) -> Response {
-    let response = get_raw(id, state);
-    Response::build_from(response)
-        .header(ContentType::Binary)
-        .finalize()
+fn get_binary(id: &str, state: &State<DB>) -> Responder<'static> {
+    let Responder(response) = get_raw(id, state);
+    Responder(
+        Response::build_from(response)
+            .header(ContentType::Binary)
+            .finalize()
+    )
 }
 
 #[get("/static/<resource..>")]
 fn get_static<'r>(
     resource: PathBuf,
-    handlebars: State<Handlebars>,
-    plugin_manager: State<PluginManager>,
-    cfg: State<PastebinConfig>,
-) -> Response<'r> {
+    handlebars: &State<Handlebars>,
+    plugin_manager: &State<PluginManager>,
+    cfg: &State<PastebinConfig>,
+) -> Responder<'r> {
     let resources = plugin_manager.static_resources();
     let pth = Path::new("/static/").join(resource);
     let pth_str = pth.to_string_lossy();
@@ -648,15 +665,17 @@ fn get_static<'r>(
     };
     let content_type = ContentType::from_extension(ext.as_str()).unwrap();
 
-    Response::build()
-        .status(Status::Ok)
-        .header(content_type)
-        .sized_body(Cursor::new(content.iter()))
-        .finalize()
+    Responder(
+        Response::build()
+            .status(Status::Ok)
+            .header(content_type)
+            .sized_body(content.len(), Cursor::new(content.iter()))
+            .finalize()
+    )
 }
 
 #[get("/")]
-fn index(cfg: State<PastebinConfig>) -> Redirect {
+fn index(cfg: &State<PastebinConfig>) -> Redirect {
     let url = String::from(
         Path::new(cfg.uri_prefix.as_str())
             .join("new")
@@ -667,31 +686,28 @@ fn index(cfg: State<PastebinConfig>) -> Redirect {
     Redirect::to(url)
 }
 
-fn rocket(pastebin_config: PastebinConfig) -> rocket::Rocket {
+fn rocket(pastebin_config: PastebinConfig) -> rocket::Rocket<rocket::Build> {
     // parse command line opts
-    let environ: Environment = pastebin_config.environment.parse().unwrap();
     let workers = if pastebin_config.workers != 0 {
         pastebin_config.workers
     } else {
-        num_cpus::get() as u16 * 2
+        num_cpus::get() * 2
     };
-    let mut rocket_config = Config::build(environ)
-        .address(pastebin_config.address.clone())
-        .port(pastebin_config.port)
-        .workers(workers)
-        .keep_alive(pastebin_config.keep_alive)
-        .log_level(pastebin_config.log)
-        .finalize()
-        .unwrap();
+    let mut rocket_config = Config {
+        address: pastebin_config.address.clone(),
+        port: pastebin_config.port,
+        workers: workers,
+        keep_alive: pastebin_config.keep_alive,
+        log_level: pastebin_config.log,
+        ..Default::default()
+    };
 
     // handle tls cert setup
     if pastebin_config.tls_certs.is_some() && pastebin_config.tls_key.is_some() {
-        rocket_config
-            .set_tls(
-                pastebin_config.tls_certs.clone().unwrap().as_str(),
-                pastebin_config.tls_key.clone().unwrap().as_str(),
-            )
-            .unwrap();
+        rocket_config.tls = Some(TlsConfig::from_paths(
+            pastebin_config.tls_certs.clone().unwrap().as_str(),
+            pastebin_config.tls_key.clone().unwrap().as_str(),
+        ))
     }
 
     // setup db
@@ -795,7 +811,8 @@ fn rocket(pastebin_config: PastebinConfig) -> rocket::Rocket {
         )
 }
 
-fn main() {
+#[launch]
+fn rocket_main() -> _ {
     let pastebin_config = PastebinConfig::from_args();
-    rocket(pastebin_config).launch();
+    rocket(pastebin_config)
 }
