@@ -543,7 +543,6 @@ fn get_new<'r>(
     let level = level.unwrap_or_else(|| String::from("secondary"));
     let glyph = glyph.unwrap_or_else(|| String::from(""));
     let url = url.unwrap_or_else(|| String::from(""));
-    let root: Vec<u8>;
 
     let auth_token = match cookies.get("auth-token") {
         Some(cookie) => cookie.value().to_string(),
@@ -570,14 +569,15 @@ fn get_new<'r>(
     });
 
     if let Some(id) = id {
-        root = get_entry_data(&id, &state).unwrap();
-        let entry = root_as_entry(&root).unwrap();
+        let _ = get_entry_data(&id, &state).map(|root| {
+            let entry = root_as_entry(&root).unwrap();
 
-        if entry.encrypted() {
-            map["is_encrypted"] = json!("true");
-        }
+            if entry.encrypted() {
+                map["is_encrypted"] = json!("true");
+            }
 
-        map["pastebin_code"] = json!(std::str::from_utf8(entry.data().unwrap().bytes()).unwrap());
+            map["pastebin_code"] = json!(std::str::from_utf8(entry.data().unwrap().bytes()).unwrap());
+        });
     }
 
     let content = handlebars.render_template(html.as_str(), &map).unwrap();
