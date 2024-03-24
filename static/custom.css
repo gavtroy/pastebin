@@ -69,20 +69,24 @@ body {
 .toolbar {
 	display: none;
 }
-pre[class*="language-"] {
-	padding-top: 0 !important;
-	outline: none;
+pre.lang {
+	padding: 0 1em 1em 0 !important;
+	margin: 0.5em 0 !important;
+	outline: none !important;
 }
-pre[class*="language-"]:before,
-pre[class*="language-"]:after {
+pre.lang:before,
+pre.lang:after {
     display: none;
 }
-pre[class*="language-"]>code {
+#pastebin-code-block {
 	border-left: 0;
 	display: block;
 }
-pre[class*="language-"],
-pre[class*="language-"] > code {
+#pastebin-code-block.line-numbers {
+	padding-left: 3.8em;
+}
+#content-textarea, pre.lang,
+#pastebin-code-block {
 	white-space: pre-wrap !important;
 	font-family: 'Noto Sans Mono', monospace !important;
 	font-size: 13px !important;
