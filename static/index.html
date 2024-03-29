@@ -94,7 +94,8 @@
                             <option value="text">Plain text</option>
                             <option disabled>──────────</option>
                             <option value="bash">Bash</option>
-                            <option value="clike">C-like</option>
+                            <option value="c">C</option>
+                            <option value="cpp">C++</option>
                             <option value="css">CSS</option>
                             <option value="go">Go</option>
                             <option value="markup">HTML</option>
@@ -130,9 +131,8 @@
                             <option value="bison">Bison</option>
                             <option value="brainfuck">Brainfuck</option>
                             <option value="bro">Bro</option>
-                            <option value="c">C</option>
+                            <option value="clike">C-like</option>
                             <option value="csharp">C#</option>
-                            <option value="cpp">C++</option>
                             <option value="clojure">Clojure</option>
                             <option value="coffeescript">CoffeeScript</option>
                             <option value="cobol">COBOL</option>
@@ -297,7 +297,7 @@
 
             {{#if is_editable}}
             <div class="form-group">
-                <textarea autofocus class="form-control shadow-none" id="content-textarea" rows="25">{{pastebin_code}}</textarea>
+                <textarea autofocus class="form-control shadow-none" id="content-textarea" rows="35">{{pastebin_code}}</textarea>
             </div>
             {{/if}}
             {{#if is_created or is_clone}}
