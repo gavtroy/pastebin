@@ -38,20 +38,29 @@ $(document).ready(function() {
 
     function checkPasswordModal() {
         if ($("#password-modal").length) {
-            $('#password-modal').modal('toggle');
+            let pass = window.location.hash.slice(1);
+            let end_of_pass;
+            if ((end_of_pass = pass.lastIndexOf('.')) > 0) {
+                pass = pass.slice(0, end_of_pass);
+            }
+            if (pass.length && pass != "L") {
+                $("#clone-btn").attr("href", (_, href) => {
+                    return href + "#" + pass;
+                });
+                /* hacked in compatibility with linkable line numbers */
+                $("#L").attr("id", pass);
+                $("#modal-password").val(pass);
+                $('#decrypt-btn').click();
+            } else {
+                $('#password-modal').modal('toggle');
+            }
         }
     }
-
-    resetLanguageSelector();
-    checkPasswordModal();
-    init_plugins();
 
     var state = {
         expiry: getDefaultExpiryTime(),
         burn: 0,
     };
-
-    window.history.replaceState(null, null, window.location.pathname + window.location.hash);
 
     function languageChanged() {
         if ($("#pastebin-code-block").length) {
@@ -65,6 +74,12 @@ $(document).ready(function() {
         $(this).toggleClass('active');
         $(this).attr('aria-pressed', $(this).hasClass('active'))
         languageChanged();
+    });
+
+    $("#random-password-button").click(function(event) {
+        $(this).toggleClass('active');
+        $(this).attr('aria-pressed', $(this).hasClass('active'))
+        $("#pastebin-password").prop("disabled", $(this).hasClass('active'));
     });
 
     $("#language-selector").change(languageChanged);
@@ -171,7 +186,15 @@ $(document).ready(function() {
 
         var data = $("#content-textarea").val();
         var pass = $("#pastebin-password").val();
+        let pass_fragment = "";
 
+        if ($("#random-password-button").hasClass('active')) {
+            const random = window.crypto.getRandomValues(new Uint8Array(21));
+            pass = "p" + await blobToBase64(new Blob([random]));
+            pass = pass.replaceAll("+", "-");
+            pass = pass.replaceAll("/", "_");
+            pass_fragment = "#" + pass;
+        }
         if (pass.length > 0) {
             data = await encrypt(data, pass);
             uri = replaceUrlParam(uri, 'encrypted', true);
@@ -188,10 +211,11 @@ $(document).ready(function() {
                     uri = replaceUrlParam(uri, 'glyph', "fas fa-check");
                     uri = replaceUrlParam(uri, 'msg', "The paste has been successfully created:");
                     uri = replaceUrlParam(uri, 'url', result);
+                    uri = replaceUrlParam(uri, 'fixup_needed', "");
 
-                    window.location.href = encodeURI(uri);
+                    window.location.href = encodeURI(uri) + pass_fragment;
                 } else {
-                    window.location.href = result;
+                    window.location.href = result + pass_fragment;
                 }
             }
         });
@@ -213,7 +237,7 @@ $(document).ready(function() {
 
     $('#password-modal').on('shown.bs.modal', function () {
         $('#modal-password').trigger('focus');
-    })
+    });
 
     $('#password-modal form').submit(function(event) {
         event.preventDefault();
@@ -249,6 +273,7 @@ $(document).ready(function() {
             }
         } catch (error) {
             $("#modal-alert").removeClass("collapse");
+            $('#password-modal').modal('show');
             return;
         }
         if ($("#pastebin-code-block").length) {
@@ -261,4 +286,17 @@ $(document).ready(function() {
         $("#modal-close-btn").click();
         $("#modal-alert").alert('close');
     });
+
+    if (new URLSearchParams(window.location.search).has("fixup_needed")) {
+        $("#fixmeup").attr("href", (_, href) => {
+            return href + window.location.hash;
+        });
+        $("#fixmeup").text($("#fixmeup").attr("href"));
+    }
+
+    resetLanguageSelector();
+    checkPasswordModal();
+    init_plugins();
+
+    window.history.replaceState(null, null, window.location.pathname + window.location.hash);
 });

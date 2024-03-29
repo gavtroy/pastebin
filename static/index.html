@@ -53,7 +53,7 @@
                     {{/if}}
 
                     {{#if is_editable}}
-                    <li class="nav-item dropdown">
+                    <li class="nav-item dropdown mr-3 mr-md-0">
                         <a id="expiry-dropdown-btn" class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Expires: {{ui_expiry_default}}</a>
                         <div class="dropdown-menu" id="expiry-dropdown">
                             {{#each ui_expiry_times}}
@@ -80,9 +80,6 @@
                 {{/if}}
 
                 <div class="ml-auto d-flex mt-1 mt-md-0 mb-1 mb-md-0">
-                    {{#if is_editable}}
-                    <input class="form-control mr-2" id="pastebin-password" type="password" placeholder="Password (optional)" aria-label="Password (optional)">
-                    {{/if}}
                     {{#if (or is_editable is_created)}}
                     <div class="input-group mr-2">
                         <div class="input-group-prepend">
@@ -254,6 +251,14 @@
                         </select>
                     </div>
                     {{/if}}
+                    {{#if is_editable}}
+                    <div class="input-group mr-2">
+                        <div class="input-group-prepend">
+                            <button class="btn btn-outline-secondary" id="random-password-button" type="button" aria-pressed="false">Random</button>
+                        </div>
+                        <input class="form-control" id="pastebin-password" type="password" placeholder="Password (optional)" aria-label="Password (optional)">
+                    </div>
+                    {{/if}}
                     {{#if is_created}}
                     <div class="btn-group" role="group">
                         <a id="copy-btn" class="form-control btn btn-outline-info" href="#">Copy</a>
@@ -287,7 +292,7 @@
                 {{#if msg}}
                 <div class="mt-3 alert alert-{{level}} alert-dismissible fade show" role="alert">
                     {{#if glyph}}<i class="{{glyph}}"></i>&ensp;{{/if}}
-                    {{#if msg_title}}<span title="{{msg_title}}"> {{/if}}{{msg}}{{#if url}} <a href="{{url}}">{{url}}</a>{{/if}}{{#if msg_title}}</span>{{/if}}
+                    {{#if msg_title}}<span title="{{msg_title}}"> {{/if}}{{msg}}{{#if url}} <a href="{{url}}" id="fixmeup">{{url}}</a>{{/if}}{{#if msg_title}}</span>{{/if}}
                     <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -310,7 +315,7 @@
     </footer>
 
     {{#if is_encrypted}}
-    <div class="modal fade" id="password-modal" tabindex="-1" role="dialog" aria-labelledby="password-modal-label" aria-hidden="true">
+    <div class="modal fade hide" id="password-modal" tabindex="-1" role="dialog" aria-labelledby="password-modal-label" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
