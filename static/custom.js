@@ -15,18 +15,20 @@ $(document).ready(function() {
 
     function resetLanguageSelector() {
         var url = new URL(document.location);
-        var params = url.searchParams;
-        var lang = params.get("lang");
-
-        if (lang != null) {
-            $("#language-selector").val(lang);
-        } else {
-            if($("#pastebin-code-block").length) {
-                $("#language-selector").val(
-                    $("#pastebin-code-block").prop("class").trim().split('-')[1]
-                );
-            }
+        var lang = url.searchParams.get("lang");
+        if (!lang) {
+            lang = $("#pastebin-code-block").prop("class");
         }
+        if (!lang) {
+            return;
+        }
+        langs = lang.trim().split('-');
+        lang = langs.pop();
+        diff = langs.pop() == "diff";
+
+        $("#diff-button").toggleClass('active', diff);
+        $("#diff-button").attr('aria-pressed', $("#diff-button").hasClass('active'))
+        $("#language-selector").val(lang);
     }
 
     function getDefaultExpiryTime() {
@@ -51,12 +53,21 @@ $(document).ready(function() {
 
     window.history.replaceState(null, null, window.location.pathname + window.location.hash);
 
-    $("#language-selector").change(function() {
+    function languageChanged() {
         if ($("#pastebin-code-block").length) {
-            $('#pastebin-code-block').attr('class', 'language-' + $("#language-selector").val());
+            diff_tag = $("#diff-button").hasClass("active") ? "diff-" : "";
+            $('#pastebin-code-block').attr('class', 'language-' + diff_tag + $("#language-selector").val());
             init_plugins();
         }
+    }
+
+    $("#diff-button").click(function(event) {
+        $(this).toggleClass('active');
+        $(this).attr('aria-pressed', $(this).hasClass('active'))
+        languageChanged();
     });
+
+    $("#language-selector").change(languageChanged);
 
     $("#remove-btn").on("click", function(event) {
         event.preventDefault();
@@ -98,8 +109,9 @@ $(document).ready(function() {
     $("#send-btn").on("click", function(event) {
         event.preventDefault();
 
+        diff_tag = $("#diff-button").hasClass("active") ? "diff-" : "";
         uri = uri_prefix == "" ? "/" : uri_prefix;
-        uri = replaceUrlParam(uri, 'lang', $("#language-selector").val());
+        uri = replaceUrlParam(uri, 'lang', diff_tag + $("#language-selector").val());
         uri = replaceUrlParam(uri, 'ttl', state.expiry);
         uri = replaceUrlParam(uri, 'burn', state.burn);
 
