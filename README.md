@@ -42,7 +42,7 @@ This is a rust version of Pastebin service with [rocksdb](https://rocksdb.org/) 
 * [RocksDB compaction filter](https://github.com/facebook/rocksdb/wiki/Compaction-Filter) - the expired pastes will be automatically removed by custom compaction filter
 * [flatbuffers](https://google.github.io/flatbuffers/) - data is serialized with flatbuffers (access to serialized data without parsing/unpacking)
 * GUI - the UI is a plain HTML with [Bootstrap JS](https://getbootstrap.com/), [jQuery](https://jquery.com/) and [prism.js](https://prismjs.com/)
-* Encryption - password-protected pastes are AES encrypted/decprypted in the browser via [CryptoJS](https://code.google.com/archive/p/crypto-js/)
+* Encryption - password-protected pastes are AES-GCM encrypted/decrypted in the browser using the [Web Crypto API](https://w3c.github.io/webcrypto/)
 
 ### Plugins
 The default configuration enables only one plugin, this is syntax highlighting through `prism.js`. This should be enough for p90 of the users but if you need extra features you might want to use the plugin system (`src/plugins`).

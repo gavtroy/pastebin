@@ -13,11 +13,11 @@ pub fn new<'r>(plugins: Vec<Box<dyn plugin::Plugin<'r>>>) -> plugin::PluginManag
     );
 
     let base_css_imports = vec![
-        "/static/custom.css",
+        "/static/custom.css?v1",
     ];
 
     let base_js_imports = vec![
-        "/static/custom.js",
+        "/static/custom.js?v1",
     ];
 
     plugin::PluginManager::build()

@@ -106,7 +106,61 @@ $(document).ready(function() {
 
     });
 
-    $("#send-btn").on("click", function(event) {
+    $("#pastebin-password").on("keydown", function(event) {
+        if (event.key === 'Enter') {
+            $("#send-btn").click();
+        }
+    });
+
+    async function blobToBase64(blob) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const dataUrl = event.target.result;
+                const [_, base64] = dataUrl.split(',');
+                resolve(base64);
+            };
+            reader.readAsDataURL(blob);
+        });
+    }
+
+    async function base64ToBytes(str) {
+        const dataUrl = "data:application/octet-stream;base64," + str;
+        const res = await fetch(dataUrl);
+        return new Uint8Array(await res.arrayBuffer());
+    }
+
+    async function deriveKey(salt, password) {
+        const pass = new TextEncoder().encode(password);
+        const keymat_in = await window.crypto.subtle.importKey("raw", pass, "PBKDF2", false, ["deriveBits"]);
+
+        const kdf_params = { name: "PBKDF2", hash: "SHA-256", salt: salt, iterations: 100000 };
+        const keymat_out = await window.crypto.subtle.deriveBits(kdf_params, keymat_in, 256+96);
+        const key_raw = keymat_out.slice(0, 32);
+        const key = await window.crypto.subtle.importKey("raw", key_raw, "AES-GCM", false, ["encrypt", "decrypt"]);
+        const iv = keymat_out.slice(32, 44);
+
+        return [key, iv];
+    }
+
+    async function encrypt(data, pass) {
+        const salt = window.crypto.getRandomValues(new Uint8Array(12));
+        const [key, iv] = await deriveKey(salt, pass);
+        const message = new TextEncoder().encode(data);
+        const ciphertext = window.crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, message);
+        return blobToBase64(new Blob(["v1", salt, await ciphertext]));
+    }
+
+    async function decrypt(data, pass) {
+        const bytes = await base64ToBytes(data);
+        const salt = bytes.slice(2, 14);
+        const ciphertext = bytes.slice(14);
+        const [key, iv] = await deriveKey(salt, pass);
+        const message = window.crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, ciphertext);
+        return new TextDecoder().decode(await message);
+    }
+
+    $("#send-btn").on("click", async function(event) {
         event.preventDefault();
 
         diff_tag = $("#diff-button").hasClass("active") ? "diff-" : "";
@@ -118,8 +172,8 @@ $(document).ready(function() {
         var data = $("#content-textarea").val();
         var pass = $("#pastebin-password").val();
 
-        if ($("#pastebin-password").val().length > 0) {
-            data = CryptoJS.AES.encrypt(data, pass).toString();
+        if (pass.length > 0) {
+            data = await encrypt(data, pass);
             uri = replaceUrlParam(uri, 'encrypted', true);
         }
 
@@ -166,7 +220,7 @@ $(document).ready(function() {
         $('#decrypt-btn').click();
     });
 
-    $('#decrypt-btn').click(function(event) {
+    $('#decrypt-btn').click(async function(event) {
         var pass = $("#modal-password").val();
         var data = "";
 
@@ -176,19 +230,35 @@ $(document).ready(function() {
             data = $("#content-textarea").text();
         }
 
-        var decrypted = CryptoJS.AES.decrypt(data, pass).toString(CryptoJS.enc.Utf8);
-        if (decrypted.length == 0) {
-            $("#modal-alert").removeClass("collapse");
-        } else {
-            if ($("#pastebin-code-block").length) {
-                $("#pastebin-code-block").text(decrypted);
-                init_plugins();
+        let decrypted;
+        try {
+            if (data.startsWith("U2FsdGVkX1")) {
+                // legacy CryptoJS pastes
+                await new Promise((resolve) => {
+                    var script = document.createElement('script');
+                    script.src = "https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js";
+                    script.onload = resolve;
+                    document.head.appendChild(script);
+                });
+                decrypted = CryptoJS.AES.decrypt(data, pass).toString(CryptoJS.enc.Utf8);
+                if (decrypted.length == 0) {
+                    throw new Error("wrong password or empty paste");
+                }
             } else {
-                $("#content-textarea").text(decrypted);
+                decrypted = await decrypt(data, pass);
             }
-
-            $("#modal-close-btn").click();
-            $("#modal-alert").alert('close');
+        } catch (error) {
+            $("#modal-alert").removeClass("collapse");
+            return;
         }
+        if ($("#pastebin-code-block").length) {
+            $("#pastebin-code-block").text(decrypted);
+            init_plugins();
+        } else {
+            $("#content-textarea").text(decrypted);
+        }
+
+        $("#modal-close-btn").click();
+        $("#modal-alert").alert('close');
     });
 });
