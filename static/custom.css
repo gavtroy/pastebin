@@ -17,7 +17,7 @@
     background: var(--dark) !important;
   }
 
-  .dropdown-item {
+  .dropdown-item, .no-paste {
     color: var(--color-text) !important;
   }
 
@@ -31,6 +31,11 @@
 
   .form-control:disabled {
 	background: #363636 !important;
+  }
+
+  .modal-content {
+	color: #ccc !important;
+	background: #444 !important;
   }
 }
 
@@ -61,7 +66,7 @@ body {
 }
 
 .footer a {
-   color: #000;
+   color: var(--color-text);
 }
 
 .form-group textarea {
@@ -78,7 +83,7 @@ body {
 	display: none;
 }
 pre.lang {
-	padding: 0 1em 1em 0 !important;
+	padding: 0 !important;
 	margin: 0.5em 0 !important;
 	outline: none !important;
 }
