@@ -13,8 +13,8 @@ pub fn new<'r>() -> PastebinPlugin<'r> {
         static_resources: load_static_resources! {
             "/static/prism.js" => "../../static/prism.js",
             "/static/prism.css" =>"../../static/prism.css",
-            "/static/prism-one-light.css" =>"../../static/prism-one-light.css",
-            "/static/prism-material-dark.css" =>"../../static/prism-material-dark.css",
+            "/static/prism-one-light-pb.css" =>"../../static/prism-one-light-pb.css",
+            "/static/prism-coldark-pb.css" =>"../../static/prism-coldark-pb.css",
             "/static/components/prism-abap.min.js" => "../../static/components/prism-abap.min.js",
             "/static/components/prism-abnf.min.js" => "../../static/components/prism-abnf.min.js",
             "/static/components/prism-actionscript.min.js" => "../../static/components/prism-actionscript.min.js",

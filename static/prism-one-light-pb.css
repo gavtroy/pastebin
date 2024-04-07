@@ -1,4 +1,5 @@
 /**
+ * -- this version modified for pastebin; original details below:
  * One Light theme for prism.js
  * Based on Atom's One Light theme: https://github.com/atom/atom/tree/master/packages/one-light-syntax
  */
@@ -96,11 +97,12 @@ pre[class*="language-"] {
 .token.constant,
 .token.number,
 .token.atrule {
-	color: hsl(35, 99%, 36%);
+	color: hsl(221, 87%, 60%);
 }
 
-.token.keyword {
-	color: hsl(301, 63%, 40%);
+.token.keyword,
+.token.operator {
+	color: hsl(35, 99%, 36%);
 }
 
 .token.property,
@@ -123,60 +125,12 @@ pre[class*="language-"] {
 }
 
 .token.variable,
-.token.operator,
 .token.function {
-	color: hsl(221, 87%, 60%);
+	color: hsl(301, 63%, 40%);
 }
 
 .token.url {
 	color: hsl(198, 99%, 37%);
-}
-
-/* HTML overrides */
-.token.attr-value > .token.punctuation.attr-equals,
-.token.special-attr > .token.attr-value > .token.value.css {
-	color: hsl(230, 8%, 24%);
-}
-
-/* CSS overrides */
-.language-css .token.selector {
-	color: hsl(5, 74%, 59%);
-}
-
-.language-css .token.property {
-	color: hsl(230, 8%, 24%);
-}
-
-.language-css .token.function,
-.language-css .token.url > .token.function {
-	color: hsl(198, 99%, 37%);
-}
-
-.language-css .token.url > .token.string.url {
-	color: hsl(119, 34%, 47%);
-}
-
-.language-css .token.important,
-.language-css .token.atrule .token.rule {
-	color: hsl(301, 63%, 40%);
-}
-
-/* JS overrides */
-.language-javascript .token.operator {
-	color: hsl(301, 63%, 40%);
-}
-
-.language-javascript .token.template-string > .token.interpolation > .token.interpolation-punctuation.punctuation {
-	color: hsl(344, 84%, 43%);
-}
-
-/* JSON overrides */
-.language-json .token.operator {
-	color: hsl(230, 8%, 24%);
-}
-
-.language-json .token.null.keyword {
-	color: hsl(35, 99%, 36%);
 }
 
 /* MD overrides */
@@ -187,7 +141,7 @@ pre[class*="language-"] {
 }
 
 .language-markdown .token.url > .token.content {
-	color: hsl(221, 87%, 60%);
+	color: hsl(301, 63%, 40%);
 }
 
 .language-markdown .token.url > .token.url,
@@ -206,11 +160,11 @@ pre[class*="language-"] {
 }
 
 .language-markdown .token.bold .token.content {
-	color: hsl(35, 99%, 36%);
+	color: hsl(221, 87%, 60%);
 }
 
 .language-markdown .token.italic .token.content {
-	color: hsl(301, 63%, 40%);
+	color: hsl(35, 99%, 36%);
 }
 
 .language-markdown .token.strike .token.content,
@@ -310,32 +264,6 @@ pre[id].linkable-line-numbers.linkable-line-numbers span.line-numbers-rows > spa
 	color: hsl(230, 1%, 62%);
 }
 
-/* Match Braces plugin overrides */
-/* Note: Outline colour is inherited from the braces */
-.rainbow-braces .token.token.punctuation.brace-level-1,
-.rainbow-braces .token.token.punctuation.brace-level-5,
-.rainbow-braces .token.token.punctuation.brace-level-9 {
-	color: hsl(5, 74%, 59%);
-}
-
-.rainbow-braces .token.token.punctuation.brace-level-2,
-.rainbow-braces .token.token.punctuation.brace-level-6,
-.rainbow-braces .token.token.punctuation.brace-level-10 {
-	color: hsl(119, 34%, 47%);
-}
-
-.rainbow-braces .token.token.punctuation.brace-level-3,
-.rainbow-braces .token.token.punctuation.brace-level-7,
-.rainbow-braces .token.token.punctuation.brace-level-11 {
-	color: hsl(221, 87%, 60%);
-}
-
-.rainbow-braces .token.token.punctuation.brace-level-4,
-.rainbow-braces .token.token.punctuation.brace-level-8,
-.rainbow-braces .token.token.punctuation.brace-level-12 {
-	color: hsl(301, 63%, 40%);
-}
-
 /* Diff Highlight plugin overrides */
 /* Taken from https://github.com/atom/github/blob/master/styles/variables.less */
 pre.diff-highlight > code .token.token.deleted:not(.prefix),
@@ -374,55 +302,4 @@ pre.diff-highlight > code .token.token.inserted:not(.prefix) *::selection,
 pre > code.diff-highlight .token.token.inserted:not(.prefix)::selection,
 pre > code.diff-highlight .token.token.inserted:not(.prefix) *::selection {
 	background-color: hsla(135, 73%, 55%, 0.25);
-}
-
-/* Previewers plugin overrides */
-/* Based on https://github.com/atom-community/atom-ide-datatip/blob/master/styles/atom-ide-datatips.less and https://github.com/atom/atom/blob/master/packages/one-light-ui */
-/* Border around popup */
-.prism-previewer.prism-previewer:before,
-.prism-previewer-gradient.prism-previewer-gradient div {
-	border-color: hsl(0, 0, 95%);
-}
-
-/* Angle and time should remain as circles and are hence not included */
-.prism-previewer-color.prism-previewer-color:before,
-.prism-previewer-gradient.prism-previewer-gradient div,
-.prism-previewer-easing.prism-previewer-easing:before {
-	border-radius: 0.3em;
-}
-
-/* Triangles pointing to the code */
-.prism-previewer.prism-previewer:after {
-	border-top-color: hsl(0, 0, 95%);
-}
-
-.prism-previewer-flipped.prism-previewer-flipped.after {
-	border-bottom-color: hsl(0, 0, 95%);
-}
-
-/* Background colour within the popup */
-.prism-previewer-angle.prism-previewer-angle:before,
-.prism-previewer-time.prism-previewer-time:before,
-.prism-previewer-easing.prism-previewer-easing {
-	background: hsl(0, 0%, 100%);
-}
-
-/* For angle, this is the positive area (eg. 90deg will display one quadrant in this colour) */
-/* For time, this is the alternate colour */
-.prism-previewer-angle.prism-previewer-angle circle,
-.prism-previewer-time.prism-previewer-time circle {
-	stroke: hsl(230, 8%, 24%);
-	stroke-opacity: 1;
-}
-
-/* Stroke colours of the handle, direction point, and vector itself */
-.prism-previewer-easing.prism-previewer-easing circle,
-.prism-previewer-easing.prism-previewer-easing path,
-.prism-previewer-easing.prism-previewer-easing line {
-	stroke: hsl(230, 8%, 24%);
-}
-
-/* Fill colour of the handle */
-.prism-previewer-easing.prism-previewer-easing circle {
-	fill: transparent;
 }
