@@ -38,21 +38,23 @@ $(document).ready(function() {
 
     function checkPasswordModal() {
         if ($("#password-modal").length) {
-            let pass = window.location.hash.slice(1);
+            let uri_pass = window.location.hash.slice(1);
             let end_of_pass;
-            if ((end_of_pass = pass.lastIndexOf('.')) > 0) {
-                pass = pass.slice(0, end_of_pass);
+            if ((end_of_pass = uri_pass.lastIndexOf('.')) > 0) {
+                uri_pass = uri_pass.slice(0, end_of_pass);
             }
-            if (pass.length && pass != "L") {
+            if (uri_pass.length && uri_pass != "L") {
                 $("#clone-btn").attr("href", (_, href) => {
-                    return href + "#" + pass;
+                    return href + "#" + uri_pass;
                 });
+                $("#modal-uri-password").val(uri_pass);
                 /* hacked in compatibility with linkable line numbers */
-                $("#L").attr("id", pass);
-                $("#modal-password").val(pass);
-                $('#decrypt-btn').click();
-            } else {
+                $("#L").attr("id", uri_pass);
+            }
+            if (uri_pass.charAt(1) == ":") {
                 $('#password-modal').modal('toggle');
+            } else {
+                $('#decrypt-btn').click();
             }
         }
     }
@@ -76,10 +78,10 @@ $(document).ready(function() {
         languageChanged();
     });
 
-    $("#random-password-button").click(function(event) {
+    $("#encrypted-button").click(function(event) {
         $(this).toggleClass('active');
         $(this).attr('aria-pressed', $(this).hasClass('active'))
-        $("#pastebin-password").prop("disabled", $(this).hasClass('active'));
+        $("#pastebin-password").prop("disabled", !$(this).hasClass('active'));
     });
 
     $("#language-selector").change(languageChanged);
@@ -123,7 +125,7 @@ $(document).ready(function() {
 
     $("#pastebin-password").on("keydown", function(event) {
         if (event.key === 'Enter') {
-            $("#send-btn").click();
+            $("#post-btn").click();
         }
     });
 
@@ -175,7 +177,7 @@ $(document).ready(function() {
         return new TextDecoder().decode(await message);
     }
 
-    $("#send-btn").on("click", async function(event) {
+    $("#post-btn").on("click", async function(event) {
         event.preventDefault();
 
         diff_tag = $("#diff-button").hasClass("active") ? "diff-" : "";
@@ -185,18 +187,21 @@ $(document).ready(function() {
         uri = replaceUrlParam(uri, 'burn', state.burn);
 
         var data = $("#content-textarea").val();
-        var pass = $("#pastebin-password").val();
         let pass_fragment = "";
 
-        if ($("#random-password-button").hasClass('active')) {
+        if ($("#encrypted-button").hasClass('active')) {
+            let uri_pass = "p";
+            let typed_pass = $("#pastebin-password").val();
+            if (typed_pass.length > 0) {
+                uri_pass = "p:"
+            }
             const random = window.crypto.getRandomValues(new Uint8Array(21));
-            pass = "p" + await blobToBase64(new Blob([random]));
-            pass = pass.replaceAll("+", "-");
-            pass = pass.replaceAll("/", "_");
-            pass_fragment = "#" + pass;
-        }
-        if (pass.length > 0) {
-            data = await encrypt(data, pass);
+            uri_pass += await blobToBase64(new Blob([random]));
+            uri_pass = uri_pass.replaceAll("+", "-");
+            uri_pass = uri_pass.replaceAll("/", "_");
+
+            pass_fragment = "#" + uri_pass;
+            data = await encrypt(data, uri_pass + typed_pass);
             uri = replaceUrlParam(uri, 'encrypted', true);
         }
 
@@ -245,7 +250,7 @@ $(document).ready(function() {
     });
 
     $('#decrypt-btn').click(async function(event) {
-        var pass = $("#modal-password").val();
+        var pass = $("#modal-uri-password").val() + $("#modal-password").val();
         var data = "";
 
         if ($("#pastebin-code-block").length) {
