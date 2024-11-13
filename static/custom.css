@@ -73,6 +73,19 @@ body {
    color: var(--color-text);
 }
 
+/* messy fix for atrocious bootstrap idea of making hovered
+ * active and inactive toggle buttons indistinguishable */
+.btn-outline-secondary:not(:disabled):hover {
+	color: var(--gray);
+	background-color: unset;
+	box-shadow: 0 0 0 .15rem color-mix(in srgb, var(--gray) 30%, transparent);
+}
+.btn-outline-secondary:not(:disabled).active:hover,
+.btn-outline-secondary:not(:disabled):active:hover {
+	color: var(--white);
+	background-color: var(--gray);
+}
+
 .form-group textarea {
 	margin: 0.5em 0px;
 }
