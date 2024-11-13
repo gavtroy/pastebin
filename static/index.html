@@ -254,9 +254,13 @@
                     {{#if is_editable}}
                     <div class="input-group mr-2">
                         <div class="input-group-prepend">
-                            <button class="btn btn-outline-secondary" id="random-password-button" type="button" aria-pressed="false">Random</button>
+			    {{#if is_encrypted}}
+                            <button class="btn btn-outline-secondary active" id="encrypted-button" type="button" aria-pressed="true">Encrypt</button>
+			    {{else}}
+                            <button class="btn btn-outline-secondary" id="encrypted-button" type="button" aria-pressed="false">Encrypt</button>
+			    {{/if}}
                         </div>
-                        <input class="form-control" id="pastebin-password" type="password" placeholder="Password (optional)" aria-label="Password (optional)">
+                        <input class="form-control" id="pastebin-password" type="password" {{#if (not is_encrypted)}}disabled {{/if}}placeholder="Password (optional)" aria-label="Password (optional)">
                     </div>
                     {{/if}}
                     {{#if is_created}}
@@ -270,7 +274,7 @@
                     {{/if}}
                     {{#if is_editable}}
                     <div class="btn-group" role="group">
-                        <a id="send-btn" class="form-control btn btn-outline-success" href="#">Send</a>
+                        <a id="post-btn" class="form-control btn btn-outline-success" href="#">Post</a>
                     </div>
                     {{/if}}
                 </div>
@@ -332,6 +336,7 @@
                             <i class="fas fa-exclamation-triangle"></i>&ensp;Could not decrypt data. Wrong password?
                         </div>
                         <div class="form-group">
+                            <input type="hidden" class="form-control" id="modal-uri-password">
                             <input type="password" class="form-control" id="modal-password">
                         </div>
                     </form>
