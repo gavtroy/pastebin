@@ -291,17 +291,17 @@ struct PastebinConfig {
     #[structopt(
         long = "slug-charset",
         help = "Character set (expressed as rust compatible regex) to use for generating the URL slug",
-        default_value = "[A-Za-z0-9_-]"
+        default_value = "[A-Za-z0-9]"
     )]
     slug_charset: String,
 
-    #[structopt(long = "slug-len", help = "Length of URL slug", default_value = "21")]
+    #[structopt(long = "slug-len", help = "Length of URL slug", default_value = "9")]
     slug_len: usize,
 
     #[structopt(
         long = "ui-expiry-times",
         help = "List of paste expiry times redered in the UI dropdown selector",
-        default_value = "5 minutes, 10 minutes, 1 hour, 1 day, 1 week, 1 month, 1 year, Never"
+        default_value = "10 minutes, 1 hour, 1 day, 1 week, 1 month, 1 year, Never"
     )]
     ui_expiry_times: Vec<String>,
 
