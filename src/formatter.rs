@@ -14,12 +14,12 @@ fn format_helper(
     _: &mut handlebars::RenderContext,
     out: &mut dyn handlebars::Output,
 ) -> Result<(), handlebars::RenderError> {
-    let prefix_val = h.param(0).ok_or(handlebars::RenderError::new(
-        "Param 0 is required for format helper.",
+    let prefix_val = h.param(0).ok_or(handlebars::RenderErrorReason::ParamNotFoundForIndex(
+        "format_urlx", 0,
     ))?;
 
-    let uri_val = h.param(1).ok_or(handlebars::RenderError::new(
-        "Param 1 is required for format helper.",
+    let uri_val = h.param(1).ok_or(handlebars::RenderErrorReason::ParamNotFoundForIndex(
+        "format_urlx", 1,
     ))?;
 
     let prefix = prefix_val.value().render();
