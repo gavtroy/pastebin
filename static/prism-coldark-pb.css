@@ -1,5 +1,5 @@
 /**
- * -- this version modified for pastebin; original details below:
+ * -- this version modified beyond recognition for pastebin; but details of original / inspiration theme below:
  * Coldark Theme for Prism.js
  * Theme variation: Dark
  * Tested with HTML, CSS, JS, JSON, PHP, YAML, Bash script
@@ -9,8 +9,8 @@
  */
 code[class*="language-"],
 pre[class*="language-"] {
-	color: #e3eaf2;
-	background: #272727;
+	color: #bbb;
+	background: #202020;
 	font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
 	text-align: left;
 	white-space: pre;
@@ -39,6 +39,14 @@ pre[class*="language-"] ::selection,
 code[class*="language-"]::selection,
 code[class*="language-"] ::selection {
 	background: #3c526d;
+}
+
+/* overrides color-values for the Line Highlight plugin
+ * http://prismjs.com/plugins/line-highlight/
+ */
+.line-highlight.line-highlight {
+	background: #8da1b92f;
+	background: linear-gradient(to right, hsl(192 20% 30% / 20%) 70%, rgba(153, 122, 102, 0));
 }
 
 /* Code blocks */
@@ -71,14 +79,14 @@ pre[class*="language-"] {
 }
 
 .token.punctuation {
-	color: #e3eaf2;
+	color: #b2b2b2;
 }
 
 .token.delimiter.important,
 .token.selector .parent,
 .token.tag,
 .token.tag .token.punctuation {
-	color: #66cccc;
+	color: #42a3a3;
 }
 
 .token.attr-name,
@@ -87,7 +95,7 @@ pre[class*="language-"] {
 .token.number,
 .token.constant,
 .token.selector .token.attribute {
-	color: #e6d37a;
+	color: #b2a238;
 }
 
 .token.class-name,
@@ -96,7 +104,7 @@ pre[class*="language-"] {
 .token.property,
 .token.property-access,
 .token.variable {
-	color: #6cb8e6;
+	color: #4b90ba;
 }
 
 .token.attr-value,
@@ -105,20 +113,20 @@ pre[class*="language-"] {
 .token.selector .token.value,
 .token.string,
 .token.string .token.url-link {
-	color: #91d076;
+	color: #66a14d;
 }
 
 .token.builtin,
 .token.keyword-array,
 .token.package,
 .token.regex {
-	color: #f4adf4;
+	color: #4c7adb;
 }
 
 .token.function,
 .token.selector .token.class,
 .token.selector .token.id {
-	color: #c699e3;
+	color: #a45fa4;
 }
 
 .token.atrule .token.rule,
@@ -129,17 +137,17 @@ pre[class*="language-"] {
 .token.pseudo-element,
 .token.selector,
 .token.unit {
-	color: #e9ae7e;
+	color: #bf895c;
 }
 
 .token.deleted,
 .token.important {
-	color: #cd6660;
+	color: #ca5049;
 }
 
 .token.keyword-this,
 .token.this {
-	color: #6cb8e6;
+	color: #4b90ba;
 }
 
 .token.important,
@@ -163,43 +171,43 @@ pre[class*="language-"] {
 
 .language-markdown .token.title,
 .language-markdown .token.title .token.punctuation {
-	color: #6cb8e6;
+	color: #4b90ba;
 	font-weight: bold;
 }
 
 .language-markdown .token.blockquote.punctuation {
-	color: #f4adf4;
+	color: #4c7adb;
 }
 
 .language-markdown .token.code {
-	color: #66cccc;
+	color: #42a3a3;
 }
 
 .language-markdown .token.hr.punctuation {
-	color: #6cb8e6;
+	color: #4b90ba;
 }
 
 .language-markdown .token.url .token.content {
-	color: #91d076;
+	color: #66a14d;
 }
 
 .language-markdown .token.url-link {
-	color: #e6d37a;
+	color: #b2a238;
 }
 
 .language-markdown .token.list.punctuation {
-	color: #f4adf4;
+	color: #4c7adb;
 }
 
 .language-markdown .token.table-header {
-	color: #e3eaf2;
+	color: #b2b2b2;
 }
 
 .language-json .token.operator {
-	color: #e3eaf2;
+	color: #b2b2b2;
 }
 
 .language-scss .token.variable {
-	color: #66cccc;
+	color: #42a3a3;
 }
 
