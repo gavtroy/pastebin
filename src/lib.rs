@@ -1,13 +1,16 @@
 extern crate flatbuffers;
 
 use std::io;
+use std::sync::Arc;
 use std::time::SystemTime;
 
 use flatbuffers::FlatBufferBuilder;
 use rocket::State;
 use rocket::http::CookieJar;
 use rocket::tokio;
-use rocksdb::{compaction_filter, DB};
+use rocksdb::{compaction_filter, DBWithThreadMode};
+
+pub type DB = DBWithThreadMode<rocksdb::SingleThreaded>;
 
 use sha2::Sha256;
 use hmac::{Hmac, Mac};
@@ -60,9 +63,14 @@ pub fn get_extension(filename: &str) -> &str {
         .unwrap_or("")
 }
 
-pub fn get_entry_data(id: &str, state: &State<DB>) -> Result<Vec<u8>, io::Error> {
+pub async fn get_entry_data(id: &str, state: &State<Arc<DB>>) -> Result<Vec<u8>, io::Error> {
     // read data from DB to Entry struct
-    let root = match state.get(id).unwrap() {
+    let my_id = String::from(id);
+    let my_db = state.inner().clone();
+    let lookup = tokio::task::spawn_blocking(move || {
+        my_db.get(my_id).unwrap()
+    }).await?;
+    let root = match lookup {
         Some(root) => root,
         None => return Err(io::Error::new(io::ErrorKind::NotFound, "record not found")),
     };
@@ -89,7 +97,7 @@ pub fn get_entry_data(id: &str, state: &State<DB>) -> Result<Vec<u8>, io::Error>
 
 pub async fn new_entry(
     id: &str,
-    dest: &mut Vec<u8>,
+    state: &State<Arc<DB>>,
     data: &mut rocket::data::DataStream<'_>,
     lang: String,
     ttl: u64,
@@ -99,7 +107,6 @@ pub async fn new_entry(
 ) {
     let mut bldr = FlatBufferBuilder::new();
 
-    dest.clear();
     bldr.reset();
 
     // potential speed improvement over the create_vector:
@@ -138,8 +145,11 @@ pub async fn new_entry(
     let user_offset = Entry::create(&mut bldr, &args);
     finish_entry_buffer(&mut bldr, user_offset);
 
-    let finished_data = bldr.finished_data();
-    dest.extend_from_slice(finished_data);
+    let my_id = String::from(id);
+    let my_db = state.inner().clone();
+    let _ = tokio::task::spawn_blocking(move || {
+        my_db.put(my_id, bldr.finished_data().to_vec()).unwrap();
+    }).await;
 }
 
 pub fn have_auth_token(
