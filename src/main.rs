@@ -41,7 +41,7 @@ use rocket::http::{Cookie, CookieJar};
 use rocket::response::{Redirect, Response};
 use rocket::{Data, State};
 
-use chrono::NaiveDateTime;
+use chrono::DateTime;
 use handlebars::Handlebars;
 use humantime::parse_duration;
 use nanoid::nanoid;
@@ -513,7 +513,7 @@ fn get<'r>(
         timeto.ago("");
         let now_timestamp = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs();
         let dur = Duration::from_secs(entry.expiry_timestamp() - now_timestamp);
-        let time = NaiveDateTime::from_timestamp_opt(entry.expiry_timestamp() as i64, 0).unwrap();
+        let time = DateTime::from_timestamp(entry.expiry_timestamp() as i64, 0).unwrap();
         map["expiry"] = json!(format!("Expires in {}", timeto.convert(dur)));
         map["expiry_title"] = json!(format!("Paste expires at {}", time.format("%Y-%m-%d %H:%M:%S")));
     }
