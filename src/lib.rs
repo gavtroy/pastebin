@@ -63,10 +63,10 @@ pub fn get_extension(filename: &str) -> &str {
         .unwrap_or("")
 }
 
-pub async fn get_entry_data(id: &str, state: &State<Arc<DB>>) -> Result<Vec<u8>, io::Error> {
+pub async fn get_entry_data(id: &str, db: &State<Arc<DB>>) -> Result<Vec<u8>, io::Error> {
     // read data from DB to Entry struct
     let my_id = String::from(id);
-    let my_db = state.inner().clone();
+    let my_db = db.inner().clone();
     let lookup = tokio::task::spawn_blocking(move || {
         my_db.get(my_id).unwrap()
     }).await?;
@@ -83,13 +83,13 @@ pub async fn get_entry_data(id: &str, state: &State<Arc<DB>>) -> Result<Vec<u8>,
         .as_secs();
 
     if entry.expiry_timestamp() != 0 && now >= entry.expiry_timestamp() {
-        state.delete(id).unwrap();
+        db.delete(id).unwrap();
         return Err(io::Error::new(io::ErrorKind::NotFound, "record not found"));
     }
 
     // "burn" one time only pastebin content
     if entry.burn() {
-        state.delete(id).unwrap();
+        db.delete(id).unwrap();
     }
 
     Ok(root)
@@ -97,7 +97,7 @@ pub async fn get_entry_data(id: &str, state: &State<Arc<DB>>) -> Result<Vec<u8>,
 
 pub async fn new_entry(
     id: &str,
-    state: &State<Arc<DB>>,
+    db: &State<Arc<DB>>,
     data: &mut rocket::data::DataStream<'_>,
     lang: String,
     ttl: u64,
@@ -146,7 +146,7 @@ pub async fn new_entry(
     finish_entry_buffer(&mut bldr, user_offset);
 
     let my_id = String::from(id);
-    let my_db = state.inner().clone();
+    let my_db = db.inner().clone();
     let _ = tokio::task::spawn_blocking(move || {
         my_db.put(my_id, bldr.finished_data().to_vec()).unwrap();
     }).await;
