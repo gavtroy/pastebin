@@ -19,7 +19,7 @@ mod formatter;
 
 #[macro_use]
 mod lib;
-use lib::{compaction_filter_expired_entries, get_entry_data, get_extension, new_entry, have_auth_token};
+use lib::{DB, compaction_filter_expired_entries, get_entry_data, get_extension, new_entry, have_auth_token};
 
 mod plugins;
 use plugins::plugin::{Plugin, PluginManager};
@@ -32,6 +32,7 @@ use std::io::Cursor;
 use std::net::IpAddr;
 use std::path::Path;
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::Duration;
 use std::time::SystemTime;
 
@@ -39,6 +40,7 @@ use rocket::config::{Config, TlsConfig};
 use rocket::http::{ContentType, Status};
 use rocket::http::{Cookie, CookieJar};
 use rocket::response::{Redirect, Response};
+use rocket::tokio;
 use rocket::{Data, State};
 
 use chrono::NaiveDateTime;
@@ -46,7 +48,7 @@ use handlebars::Handlebars;
 use humantime::parse_duration;
 use nanoid::nanoid;
 use regex::Regex;
-use rocksdb::{Options, DB};
+use rocksdb::Options;
 use serde_json::json;
 use speculate2::speculate;
 use structopt::StructOpt;
@@ -378,7 +380,7 @@ fn get_error_response<'r>(
 #[post("/?<lang>&<ttl>&<burn>&<encrypted>", data = "<paste>")]
 async fn create(
     paste: Data<'_>,
-    state: &State<DB>,
+    state: &State<Arc<DB>>,
     cfg: &State<PastebinConfig>,
     alphabet: &State<Vec<char>>,
     lang: Option<String>,
@@ -391,10 +393,9 @@ async fn create(
     let id = nanoid!(slug_len, alphabet.inner());
     let url = format!("{url}{uri_prefix}/{id}", url = get_url(cfg.inner()), uri_prefix = cfg.uri_prefix, id = id);
 
-    let mut writer: Vec<u8> = vec![];
     new_entry(
         &id,
-        &mut writer,
+        state,
         &mut paste.open(2.megabytes()),
         lang.unwrap_or_else(|| String::from("markup")),
         ttl.unwrap_or(cfg.ttl),
@@ -403,18 +404,16 @@ async fn create(
         cookies.get("auth-token").map(|c| c.value().to_string()),
     ).await;
 
-    state.put(id, writer).unwrap();
-
     Ok(url)
 }
 
 #[delete("/<id>")]
-fn remove<'r>(
+async fn remove<'r>(
     id: &str,
-    state: &State<DB>,
+    state: &State<Arc<DB>>,
     cookies: &CookieJar<'_>,
 ) -> Responder<'r> {
-    let root = match get_entry_data(id, &state) {
+    let root = match get_entry_data(id, state).await {
         Ok(x) => x,
         Err(_) => return Responder(Response::build().status(Status::NotFound).finalize()),
     };
@@ -430,12 +429,12 @@ fn remove<'r>(
 }
 
 #[get("/<id>?<lang>")]
-fn get<'r>(
+async fn get<'r>(
     id: &str,
     lang: Option<&str>,
-    state: &State<DB>,
+    state: &State<Arc<DB>>,
     handlebars: &State<Handlebars<'r>>,
-    plugin_manager: &State<PluginManager>,
+    plugin_manager: &State<PluginManager<'r>>,
     ui_expiry_times: &State<Vec<(String, u64)>>,
     ui_expiry_default: &State<String>,
     cfg: &State<PastebinConfig>,
@@ -445,7 +444,7 @@ fn get<'r>(
     let html = String::from_utf8_lossy(resources.get("/static/index.html").unwrap()).to_string();
 
     // handle missing entry
-    let root = match get_entry_data(id, &state) {
+    let root = match get_entry_data(id, state).await {
         Ok(x) => x,
         Err(e) => {
             let err_kind = match e.kind() {
@@ -534,11 +533,11 @@ fn get<'r>(
 }
 
 #[get("/new?<id>&<level>&<msg>&<glyph>&<url>")]
-fn get_new<'r>(
-    state: &State<DB>,
+async fn get_new<'r>(
+    state: &State<Arc<DB>>,
     handlebars: &State<Handlebars<'r>>,
     cfg: &State<PastebinConfig>,
-    plugin_manager: &State<PluginManager>,
+    plugin_manager: &State<PluginManager<'r>>,
     ui_expiry_times: &State<Vec<(String, u64)>>,
     ui_expiry_default: &State<String>,
     id: Option<&str>,
@@ -580,7 +579,7 @@ fn get_new<'r>(
     });
 
     if let Some(id) = id {
-        let _ = get_entry_data(id, &state).map(|root| {
+        let _ = get_entry_data(id, state).await.map(|root| {
             let entry = root_as_entry(&root).unwrap();
 
             if entry.encrypted() {
@@ -603,9 +602,9 @@ fn get_new<'r>(
 }
 
 #[get("/raw/<id>")]
-fn get_raw(id: &str, state: &State<DB>) -> Responder<'static> {
+async fn get_raw(id: &str, state: &State<Arc<DB>>) -> Responder<'static> {
     // handle missing entry
-    let root = match get_entry_data(id, &state) {
+    let root = match get_entry_data(id, state).await {
         Ok(x) => x,
         Err(e) => {
             let err_kind = match e.kind() {
@@ -620,7 +619,7 @@ fn get_raw(id: &str, state: &State<DB>) -> Responder<'static> {
     let entry = root_as_entry(&root).unwrap();
     let mut data: Vec<u8> = vec![];
 
-    io::copy(&mut entry.data().unwrap().bytes(), &mut data).unwrap();
+    tokio::io::copy(&mut entry.data().unwrap().bytes(), &mut data).await.unwrap();
 
     Responder(
         Response::build()
@@ -632,8 +631,8 @@ fn get_raw(id: &str, state: &State<DB>) -> Responder<'static> {
 }
 
 #[get("/download/<id>")]
-fn get_binary(id: &str, state: &State<DB>) -> Responder<'static> {
-    let Responder(response) = get_raw(id, state);
+async fn get_binary(id: &str, state: &State<Arc<DB>>) -> Responder<'static> {
+    let Responder(response) = get_raw(id, state).await;
     Responder(
         Response::build_from(response)
             .header(ContentType::Binary)
@@ -642,10 +641,10 @@ fn get_binary(id: &str, state: &State<DB>) -> Responder<'static> {
 }
 
 #[get("/static/<resource..>")]
-fn get_static<'r>(
+async fn get_static<'r>(
     resource: PathBuf,
-    handlebars: &State<Handlebars>,
-    plugin_manager: &State<PluginManager>,
+    handlebars: &State<Handlebars<'_>>,
+    plugin_manager: &State<PluginManager<'_>>,
     cfg: &State<PastebinConfig>,
 ) -> Responder<'r> {
     let resources = plugin_manager.static_resources();
@@ -679,7 +678,7 @@ fn get_static<'r>(
 }
 
 #[get("/")]
-fn index(cfg: &State<PastebinConfig>) -> Redirect {
+async fn index(cfg: &State<PastebinConfig>) -> Redirect {
     let url = String::from(
         Path::new(cfg.uri_prefix.as_str())
             .join("new")
@@ -715,7 +714,8 @@ fn rocket(pastebin_config: PastebinConfig) -> rocket::Rocket<rocket::Build> {
     }
 
     // setup db
-    let db = DB::open_default(pastebin_config.db_path.clone()).unwrap();
+
+    let db = Arc::new(DB::open_default(pastebin_config.db_path.clone()).unwrap());
     let mut db_opts = Options::default();
 
     db_opts.create_if_missing(true);
