@@ -380,7 +380,7 @@ fn get_error_response<'r>(
 #[post("/?<lang>&<ttl>&<burn>&<encrypted>", data = "<paste>")]
 async fn create(
     paste: Data<'_>,
-    state: &State<Arc<DB>>,
+    db: &State<Arc<DB>>,
     cfg: &State<PastebinConfig>,
     alphabet: &State<Vec<char>>,
     lang: Option<String>,
@@ -395,7 +395,7 @@ async fn create(
 
     new_entry(
         &id,
-        state,
+        db,
         &mut paste.open(2.megabytes()),
         lang.unwrap_or_else(|| String::from("markup")),
         ttl.unwrap_or(cfg.ttl),
@@ -410,10 +410,10 @@ async fn create(
 #[delete("/<id>")]
 async fn remove<'r>(
     id: &str,
-    state: &State<Arc<DB>>,
+    db: &State<Arc<DB>>,
     cookies: &CookieJar<'_>,
 ) -> Responder<'r> {
-    let root = match get_entry_data(id, state).await {
+    let root = match get_entry_data(id, db).await {
         Ok(x) => x,
         Err(_) => return Responder(Response::build().status(Status::NotFound).finalize()),
     };
@@ -422,7 +422,7 @@ async fn remove<'r>(
         return Responder(Response::build().status(Status::Unauthorized).finalize());
     }
 
-    match state.delete(id) {
+    match db.delete(id) {
         Ok(_) => Responder(Response::build().finalize()),
         _ => Responder(Response::build().status(Status::InternalServerError).finalize()),
     }
@@ -432,7 +432,7 @@ async fn remove<'r>(
 async fn get<'r>(
     id: &str,
     lang: Option<&str>,
-    state: &State<Arc<DB>>,
+    db: &State<Arc<DB>>,
     handlebars: &State<Handlebars<'r>>,
     plugin_manager: &State<PluginManager<'r>>,
     ui_expiry_times: &State<Vec<(String, u64)>>,
@@ -444,7 +444,7 @@ async fn get<'r>(
     let html = String::from_utf8_lossy(resources.get("/static/index.html").unwrap()).to_string();
 
     // handle missing entry
-    let root = match get_entry_data(id, state).await {
+    let root = match get_entry_data(id, db).await {
         Ok(x) => x,
         Err(e) => {
             let err_kind = match e.kind() {
@@ -534,7 +534,7 @@ async fn get<'r>(
 
 #[get("/new?<id>&<level>&<msg>&<glyph>&<url>")]
 async fn get_new<'r>(
-    state: &State<Arc<DB>>,
+    db: &State<Arc<DB>>,
     handlebars: &State<Handlebars<'r>>,
     cfg: &State<PastebinConfig>,
     plugin_manager: &State<PluginManager<'r>>,
@@ -579,7 +579,7 @@ async fn get_new<'r>(
     });
 
     if let Some(id) = id {
-        let _ = get_entry_data(id, state).await.map(|root| {
+        let _ = get_entry_data(id, db).await.map(|root| {
             let entry = root_as_entry(&root).unwrap();
 
             if entry.encrypted() {
@@ -602,9 +602,9 @@ async fn get_new<'r>(
 }
 
 #[get("/raw/<id>")]
-async fn get_raw(id: &str, state: &State<Arc<DB>>) -> Responder<'static> {
+async fn get_raw(id: &str, db: &State<Arc<DB>>) -> Responder<'static> {
     // handle missing entry
-    let root = match get_entry_data(id, state).await {
+    let root = match get_entry_data(id, db).await {
         Ok(x) => x,
         Err(e) => {
             let err_kind = match e.kind() {
@@ -631,8 +631,8 @@ async fn get_raw(id: &str, state: &State<Arc<DB>>) -> Responder<'static> {
 }
 
 #[get("/download/<id>")]
-async fn get_binary(id: &str, state: &State<Arc<DB>>) -> Responder<'static> {
-    let Responder(response) = get_raw(id, state).await;
+async fn get_binary(id: &str, db: &State<Arc<DB>>) -> Responder<'static> {
+    let Responder(response) = get_raw(id, db).await;
     Responder(
         Response::build_from(response)
             .header(ContentType::Binary)
