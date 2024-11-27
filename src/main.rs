@@ -37,7 +37,7 @@ use std::time::Duration;
 use std::time::SystemTime;
 
 use rocket::config::{Config, TlsConfig};
-use rocket::http::{ContentType, Status};
+use rocket::http::{ContentType, Header, Status};
 use rocket::http::{Cookie, CookieJar};
 use rocket::response::{Redirect, Response};
 use rocket::tokio;
@@ -672,6 +672,7 @@ async fn get_static<'r>(
         Response::build()
             .status(Status::Ok)
             .header(content_type)
+            .header(Header::new("Cache-Control", "max-age=31536000"))
             .sized_body(content.len(), Cursor::new(content.iter()))
             .finalize()
     )
