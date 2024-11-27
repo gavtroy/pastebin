@@ -1,6 +1,6 @@
-FROM rustlang/rust:nightly as builder
+FROM rust:latest AS builder
 
-RUN apt-get update && apt-get install -y apt-utils software-properties-common lsb-release clang
+RUN apt-get update && apt-get install -y libclang-dev
 
 WORKDIR /usr/src/pastebin
 COPY . .

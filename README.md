@@ -58,7 +58,7 @@ Currently supported:
 
 
 ## Usage
-Pastebin builds only with `rust-nightly` version and requires `llvm` compiler (rocksdb deps). To skip the build process, you can use the docker image.
+Build requires the `clang` compiler (rocksdb deps). To skip the build process, you can use the docker image.
 
 ### Cargo
 ```
