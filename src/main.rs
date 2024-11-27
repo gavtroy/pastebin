@@ -1,4 +1,3 @@
-#![feature(proc_macro_hygiene, decl_macro)]
 #![allow(clippy::too_many_arguments)]
 
 #[macro_use]
