@@ -18,7 +18,7 @@ mod formatter;
 
 #[macro_use]
 mod lib;
-use lib::{DB, compaction_filter_expired_entries, get_entry_data, get_extension, new_entry, have_auth_token};
+use lib::{DB, compaction_filter_expired_entries, get_entry_data, get_extension, get_ext_from_lang, new_entry, have_auth_token};
 
 mod plugins;
 use plugins::plugin::{Plugin, PluginManager};
@@ -490,6 +490,7 @@ async fn get<'r>(
         "pastebin_code": String::from_utf8_lossy(entry.data().unwrap().bytes()),
         "pastebin_id": id,
         "lang": selected_lang,
+        "ext": get_ext_from_lang(&selected_lang, entry.encrypted()),
         "pastebin_cls": pastebin_cls.join(" "),
         "version": VERSION,
         "uri_prefix": cfg.uri_prefix,
@@ -600,8 +601,12 @@ async fn get_new<'r>(
     )
 }
 
-#[get("/raw/<id>")]
-async fn get_raw(id: &str, db: &State<Arc<DB>>) -> Responder<'static> {
+#[get("/raw/<id>?<download>")]
+async fn get_raw(
+    id: &str,
+    db: &State<Arc<DB>>,
+    download: Option<bool>)
+-> Responder<'static> {
     // handle missing entry
     let root = match get_entry_data(id, db).await {
         Ok(x) => x,
@@ -620,23 +625,26 @@ async fn get_raw(id: &str, db: &State<Arc<DB>>) -> Responder<'static> {
 
     tokio::io::copy(&mut entry.data().unwrap().bytes(), &mut data).await.unwrap();
 
-    Responder(
-        Response::build()
-            .status(Status::Ok)
-            .header(ContentType::Plain)
-            .sized_body(data.len(), Cursor::new(data))
-            .finalize()
-    )
+    let mut response = Response::build();
+    response.status(Status::Ok)
+        .sized_body(data.len(), Cursor::new(data));
+
+    match download {
+        Some(true) => {
+            let lang = entry.lang().unwrap().to_lowercase();
+            let ext = get_ext_from_lang(&lang, entry.encrypted());
+            response.header(ContentType::Binary)
+                .raw_header("Content-Disposition", format!("attachment; filename={id}.{ext}"))
+        },
+        _ => response.header(ContentType::Plain),
+    };
+
+    Responder(response.finalize())
 }
 
 #[get("/download/<id>")]
 async fn get_binary(id: &str, db: &State<Arc<DB>>) -> Responder<'static> {
-    let Responder(response) = get_raw(id, db).await;
-    Responder(
-        Response::build_from(response)
-            .header(ContentType::Binary)
-            .finalize()
-    )
+    get_raw(id, db, Some(true)).await
 }
 
 #[get("/static/<resource..>")]

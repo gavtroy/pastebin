@@ -268,7 +268,7 @@
                         <a id="copy-btn" class="form-control btn btn-outline-info" href="#">Copy</a>
                         {{#if (not is_burned)}}
                             <a class="form-control btn btn-outline-info" href="{{uri_prefix}}/raw/{{pastebin_id}}">Raw</a>
-                            <a class="form-control btn btn-outline-info" href="{{uri_prefix}}/download/{{pastebin_id}}">Download</a>
+                            <a class="form-control btn btn-outline-info" href="{{uri_prefix}}/download/{{pastebin_id}}" download="{{pastebin_id}}.{{ext}}">Save</a>
                         {{/if}}
                     </div>
                     {{/if}}

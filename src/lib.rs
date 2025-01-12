@@ -21,6 +21,80 @@ type HmacSha256 = Hmac<Sha256>;
 mod api_generated;
 use crate::api_generated::api::{finish_entry_buffer, root_as_entry, Entry, EntryArgs};
 
+use phf::{phf_map};
+
+static EXTENSIONS: phf::Map<&'static str, &'static str> = phf_map! {
+    "log" => "log",
+    "text" => "txt",
+    "bash" => "sh",
+    "c" => "c",
+    "cpp" => "cpp",
+    "css" => "css",
+    "diff" => "diff",
+    "go" => "go",
+    "markup" => "xml",
+    "java" => "java",
+    "javascript" => "js",
+    "json" => "json",
+    "perl" => "pl",
+    "php" => "php",
+    "python" => "py",
+    "ruby" => "rb",
+    "rust" => "rs",
+    "yaml" => "yaml",
+    "actionscript" => "as",
+    "armasm" => "s",
+    "aspnet" => "aspx",
+    "autohotkey" => "ahk",
+    "autoit" => "au3",
+    "awk" => "awk",
+    "basic" => "bas",
+    "batch" => "bat",
+    "clike" => "c",
+    "csharp" => "cs",
+    "clojure" => "clj",
+    "coffeescript" => "coffee",
+    "cobol" => "cob",
+    "csv" => "csv",
+    "d" => "d",
+    "dart" => "dart",
+    "fortran" => "for",
+    "groovy" => "groovy",
+    "haskell" => "hs",
+    "ini" => "ini",
+    "kotlin" => "kt",
+    "latex" => "tex",
+    "less" => "less",
+    "lisp" => "lisp",
+    "lua" => "lua",
+    "markdown" => "md",
+    "objectivec" => "m",
+    "ocaml" => "ml",
+    "opencl" => "cl",
+    "pascal" => "pas",
+    "powershell" => "ps1",
+    "processing" => "pde",
+    "prolog" => "pl",
+    "r" => "R",
+    "jsx" => "jsx",
+    "tsx" => "tsx",
+    "rest" => "rst",
+    "sass" => "sass",
+    "scss" => "scss",
+    "scala" => "scala",
+    "scheme" => "scm",
+    "sql" => "sql",
+    "swift" => "swift",
+    "tcl" => "tcl",
+    "typescript" => "ts",
+    "vbnet" => "vb",
+    "verilog" => "v",
+    "vhdl" => "vhdl",
+    "visual-basic" => "vbs",
+    "wasm" => "wasm",
+    "wiki" => "wiki"
+};
+
 #[macro_export]
 macro_rules! load_static_resources(
     { $($key:expr => $value:expr),+ } => {
@@ -61,6 +135,17 @@ pub fn get_extension(filename: &str) -> &str {
         .map(|idx| &filename[idx..])
         .filter(|ext| ext.chars().skip(1).all(|c| c.is_ascii_alphanumeric()))
         .unwrap_or("")
+}
+
+pub fn get_ext_from_lang(mut lang: &str, encrypted: bool) -> String {
+    if lang.contains("diff-") {
+        lang = "diff";
+    }
+    let ext = EXTENSIONS.get(lang).unwrap_or(&"txt");
+    if encrypted {
+        return format!("{}.bin", ext);
+    }
+    String::from(*ext)
 }
 
 pub async fn get_entry_data(id: &str, db: &State<Arc<DB>>) -> Result<Vec<u8>, io::Error> {
