@@ -266,10 +266,10 @@
                     {{#if is_created}}
                     <div class="btn-group" role="group">
                         <a id="copy-btn" class="form-control btn btn-outline-info" href="#">Copy</a>
-                        {{#if (not is_burned)}}
-                            <a class="form-control btn btn-outline-info" href="{{uri_prefix}}/raw/{{pastebin_id}}">Raw</a>
-                            <a class="form-control btn btn-outline-info" href="{{uri_prefix}}/download/{{pastebin_id}}" download="{{pastebin_id}}.{{ext}}">Save</a>
-                        {{/if}}
+                        {{#unless (and is_burned (not is_encrypted))}}
+                            <a id="raw-btn" class="form-control btn btn-outline-info" href="{{uri_prefix}}/raw/{{pastebin_id}}">Raw</a>
+                            <a id="save-btn" class="form-control btn btn-outline-info" href="{{uri_prefix}}/download/{{pastebin_id}}" download="{{pastebin_id}}.{{ext}}">Save</a>
+                        {{/unless}}
                     </div>
                     {{/if}}
                     {{#if is_editable}}

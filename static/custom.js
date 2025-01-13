@@ -282,6 +282,13 @@ $(document).ready(function() {
             return;
         }
         if ($("#pastebin-code-block").length) {
+            window.paste_blob = new Blob([decrypted], {type: 'text/plain'});
+            const blob_url = window.URL.createObjectURL(window.paste_blob);
+            $("#raw-btn").attr("href", blob_url);
+            $("#save-btn").attr("href", blob_url);
+            $("#save-btn").attr("download", (_, name) => {
+                return name.replace(/\.bin$/, "");
+            });
             $("#pastebin-code-block").text(decrypted);
             init_plugins();
         } else {
