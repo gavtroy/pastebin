@@ -27,18 +27,15 @@ pre[class*="language-"] {
 	hyphens: none;
 }
 
-pre[class*="language-"]::-moz-selection,
-pre[class*="language-"] ::-moz-selection,
-code[class*="language-"]::-moz-selection,
-code[class*="language-"] ::-moz-selection {
-	background: #3c526d;
-}
-
 pre[class*="language-"]::selection,
 pre[class*="language-"] ::selection,
 code[class*="language-"]::selection,
 code[class*="language-"] ::selection {
-	background: #3c526d;
+	background: #2d3d50;
+}
+
+.line-numbers-rows {
+	border-right: 1px solid #555 !important;
 }
 
 /* overrides color-values for the Line Highlight plugin
@@ -108,7 +105,6 @@ pre[class*="language-"] {
 }
 
 .token.attr-value,
-.token.inserted,
 .token.color,
 .token.selector .token.value,
 .token.string,
@@ -140,7 +136,6 @@ pre[class*="language-"] {
 	color: #bf895c;
 }
 
-.token.deleted,
 .token.important {
 	color: #ca5049;
 }
@@ -209,5 +204,37 @@ pre[class*="language-"] {
 
 .language-scss .token.variable {
 	color: #42a3a3;
+}
+
+/* Diff Highlight plugin overrides */
+.token.deleted {
+	color: #9c3b22;
+}
+.token.inserted {
+    color: #507f3c;
+}
+
+pre.diff-highlight > code .token.deleted:not(.prefix),
+pre > code.diff-highlight .token.deleted:not(.prefix) {
+    background-color: lch(14 14 23);
+}
+
+pre.diff-highlight > code .token.deleted:not(.prefix)::selection,
+pre.diff-highlight > code .token.deleted:not(.prefix) *::selection,
+pre > code.diff-highlight .token.deleted:not(.prefix)::selection,
+pre > code.diff-highlight .token.deleted:not(.prefix) *::selection {
+    background-color: lch(20 14 23);
+}
+
+pre.diff-highlight > code .token.inserted:not(.prefix),
+pre > code.diff-highlight .token.inserted:not(.prefix) {
+    background-color: lch(17 18 142);
+}
+
+pre.diff-highlight > code .token.inserted:not(.prefix)::selection,
+pre.diff-highlight > code .token.inserted:not(.prefix) *::selection,
+pre > code.diff-highlight .token.inserted:not(.prefix)::selection,
+pre > code.diff-highlight .token.inserted:not(.prefix) *::selection {
+    background-color: lch(23 18 142);
 }
 
