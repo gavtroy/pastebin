@@ -1,19 +1,22 @@
-[![Build Status][travis-badge]][travis]
-[![Test and Build][github-workflow]][github-workflow]
-[![Docker Cloud Build Status][docker-cloud-build-status]][docker-hub]
-[![Docker Pulls][docker-pulls]][docker-hub]
-[![Docker Image Size][docker-size]][docker-hub]
-
-[travis-badge]: https://travis-ci.org/mkaczanowski/pastebin.svg?branch=master
-[travis]: https://travis-ci.org/mkaczanowski/pastebin/
-[docker-hub]: https://hub.docker.com/r/mkaczanowski/pastebin
-[docker-cloud-build-status]: https://img.shields.io/docker/cloud/build/mkaczanowski/pastebin
-[docker-pulls]: https://img.shields.io/docker/pulls/mkaczanowski/pastebin
-[docker-size]: https://img.shields.io/docker/image-size/mkaczanowski/pastebin/latest
-[github-workflow]: https://github.com/mkaczanowski/pastebin/workflows/Test%20and%20Build/badge.svg
-
 # Pastebin
 Simple, fast, standalone pastebin service.
+
+## Notes on this repo / version
+
+* Dependency bumps (incl. Rocket 0.5) and as a result the build is fixed
+* Various UI changes
+    * Dark theme (and a softer Light theme)
+    * Pastes are directly opened after creation
+    * Expiry is shown more discreetly and in human friendly form
+    * Text wrapping
+    * Diff highlighting
+    * Line linking
+    * Passwordless encryption (or optionally with a password)
+* Encryption reworked to use Web Crypto API and URI fragments
+* Pastes are cookie protected and can only be removed by the creator
+* & smaller changes
+
+Database compatible with `mkaczanowski/pastebin`, but `chown -R 820:820` the database or remove USER from the Dockerfile if migrating. If reverting, note that you will not be able to decrypt pastes that were encrypted with this fork.
 
 ## Why?
 Whenever you need to share a code snippet, diff, logs, or a secret with another human being, the Pastebin service is invaluable. However, using public services such as [pastebin.com](https://pastebin.com), [privnote.com](https://privnote.com), etc. should be avoided when you're sharing data that should be available only for a selected audience (i.e., your company, private network). Instead of trusting external providers, you could host your own Pastebin service and take ownership of all your data!
@@ -58,64 +61,38 @@ Currently supported:
 
 
 ## Usage
-Build requires the `clang` compiler (rocksdb deps). To skip the build process, you can use the docker image.
+Browsers will only allow the Encrypt feature if a secure connection is used. It is most convenient to manage TLS certs with a reverse proxy such as nginx, though --tls-certs and --tls-key options are also available.
 
 ### Cargo
+The rocksdb dependency requires the `clang` compiler library (and a few minutes of compilation time).
 ```
 cargo build --release
 cargo run
 ```
 ### Docker
-x86 image:
-```
-docker pull mkaczanowski/pastebin:latest
-docker run --init --network host mkaczanowski/pastebin --address localhost --port 8000
-```
+The repo must be cloned to build the Docker image. This fork is not published to Docker Hub.
 
-ARM images:
+Setup:
 ```
-docker pull mkaczanowski/pastebin:armv7
-docker pull mkaczanowski/pastebin:armv8
+mkdir -p /var/lib/pastebin.db && chown -R 820:820 /var/lib/pastebin.db
 ```
+Compose:
+```
+URI=https://paste.example.com docker compose up
+```
+Without compose:
+```
+docker build --pull -t local/pastebin .
+docker run --init -p 127.0.0.1:8000:8000 -v /var/lib/pastebin.db:/pastebin.db local/pastebin --ui-line-numbers --address=0.0.0.0 --uri=https://paste.example.com
+```
+This example would make Pastebin available on port 8000 on the local machine. Nginx could then be used to proxy to port 80 externally while adding TLS and compression.
 
-Compose setup:
-```
-URI="http://localhost" docker-compose up
-curl -L "http://localhost"
-```
 ### Client
 ```
 alias pastebin="curl -w '\n' -q -L --data-binary @- -o - http://localhost:8000/"
 
 echo "hello World" | pastebin
-http://localhost:8000/T9kGrI5aNkI4Z-PelmQ5U
-```
-
-## Nginx (optional)
-The Pastebin service serves `/static` files from memory. To lower down the load on the service you might want to consider setting up nginx with caching and compression enabled, as shown here:
-```
-map $sent_http_content_type $expires {
-    default                    off;
-    text/css                   30d;
-    application/javascript     30d;
-    image/x-icon               30d;
-}
-
-server {
-    listen       80; 
-    server_name  paste.domain.com;
-    
-    gzip on;
-    gzip_types text/plain application/xml text/css application/javascript;
-
-    expires $expires;
-    location  / {
-        proxy_pass        http://localhost:8000;
-           include        proxy-settings.conf;
-    }
-
-    access_log /var/log/nginx/access.log;
-}
+http://localhost:8000/T9kGrI5aN
 ```
 
 ## REST API
