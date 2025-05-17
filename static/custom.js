@@ -282,7 +282,7 @@ $(document).ready(function() {
             return;
         }
         if ($("#pastebin-code-block").length) {
-            window.paste_blob = new Blob([decrypted], {type: 'text/plain'});
+            window.paste_blob = new Blob([decrypted], {type: 'text/plain;charset=utf-8'});
             const blob_url = window.URL.createObjectURL(window.paste_blob);
             $("#raw-btn").attr("href", blob_url);
             $("#save-btn").attr("href", blob_url);
