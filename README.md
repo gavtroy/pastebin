@@ -78,7 +78,7 @@ mkdir -p /var/lib/pastebin.db && chown -R 820:820 /var/lib/pastebin.db
 ```
 Compose:
 ```
-URI=https://paste.example.com docker compose up
+URI=https://paste.example.com docker compose up --build
 ```
 Without compose:
 ```
