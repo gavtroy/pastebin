@@ -87,7 +87,7 @@ speculate! {
     }
 
     #[allow(dead_code)]
-    fn get_data(client: &Client, path: String) -> rocket::local::blocking::LocalResponse {
+    fn get_data(client: &Client, path: String) -> rocket::local::blocking::LocalResponse<'_> {
         client.get(format!("/{}", path)).dispatch()
     }
 
@@ -191,7 +191,7 @@ speculate! {
         let response = get_data(&client, id.clone());
         assert_eq!(response.status(), Status::Ok);
 
-        thread::sleep(time::Duration::from_secs(1));
+        thread::sleep(time::Duration::from_secs(2));
 
         // retrieve the data via get request
         let response = get_data(&client, id);
