@@ -208,6 +208,7 @@ $(document).ready(function() {
         $.ajax({
             url: uri,
             type: 'POST',
+            contentType: 'text/plain',
             data: data,
             success: function(result) {
                 if (state.burn) {
