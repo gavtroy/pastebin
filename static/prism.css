@@ -1,5 +1,5 @@
-/* PrismJS 1.29.0
-https://prismjs.com/download.html#themes=prism-coy&languages=markup+css+clike+javascript+asciidoc+aspnet+awk+bash+batch+c+csharp+cpp+cmake+csv+d+dart+diff+docker+git+go+go-module+groovy+handlebars+haskell+http+java+javastacktrace+json+log+lua+makefile+markdown+markup-templating+objectivec+perl+php+python+regex+rest+ruby+rust+shell-session+sql+swift+wiki+yaml&plugins=line-highlight+line-numbers+autoloader+toolbar+copy-to-clipboard+diff-highlight */
+/* PrismJS 1.30.0
+https://prismjs.com/download.html#themes=prism-coy&languages=markup+css+clike+javascript+asciidoc+aspnet+awk+bash+batch+c+csharp+cpp+cmake+csv+d+dart+diff+docker+git+go+go-module+groovy+handlebars+haskell+http+java+javastacktrace+json+log+lua+makefile+markdown+markup-templating+objectivec+perl+php+python+regex+rest+ruby+rust+shell-session+sql+swift+wiki+yaml&plugins=line-highlight+line-numbers+autolinker+autoloader+toolbar+copy-to-clipboard+diff-highlight */
 
 /*** File modified to remove theme section ***/
 
@@ -142,6 +142,9 @@ pre[class*="language-"].line-numbers > code {
 			text-align: right;
 		}
 
+.token a {
+	color: inherit;
+}
 div.code-toolbar {
 	position: relative;
 }
