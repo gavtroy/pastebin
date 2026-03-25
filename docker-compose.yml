@@ -1,12 +1,16 @@
 services:
   pastebin:
-    image: local/pastebin
+    image: gavtroy/pastebin
     build:
       context: .
     container_name: pastebin
     restart: unless-stopped
+    env_file: .env
     ports:
       - "127.0.0.1:8000:8000"
     volumes:
-      - /var/lib/pastebin.db:/pastebin.db
+      - pastebin-db:/pastebin.db
     command: --ui-line-numbers --address 0.0.0.0 --uri ${URI}
+
+volumes:
+  pastebin-db:

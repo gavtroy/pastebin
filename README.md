@@ -16,7 +16,7 @@ Simple, fast, standalone pastebin service.
 * Pastes are cookie protected and can only be removed by the creator
 * & smaller changes
 
-Database compatible with `mkaczanowski/pastebin`, but `chown -R 820:820` the database or remove USER from the Dockerfile if migrating. If reverting, note that you will not be able to decrypt pastes that were encrypted with this fork.
+Database compatible with `mkaczanowski/pastebin` but `chown -R 820:820` if migrating. If reverting you will not be able to decrypt pastes that were encrypted with this fork.
 
 ## Why?
 Whenever you need to share a code snippet, diff, logs, or a secret with another human being, the Pastebin service is invaluable. However, using public services such as [pastebin.com](https://pastebin.com), [privnote.com](https://privnote.com), etc. should be avoided when you're sharing data that should be available only for a selected audience (i.e., your company, private network). Instead of trusting external providers, you could host your own Pastebin service and take ownership of all your data!
@@ -70,20 +70,15 @@ cargo build --release
 cargo run
 ```
 ### Docker
-The repo must be cloned to build the Docker image. This fork is not published to Docker Hub.
-
-Setup:
-```
-mkdir -p /var/lib/pastebin.db && chown -R 820:820 /var/lib/pastebin.db
-```
 Compose:
 ```
-URI=https://paste.example.com docker compose up --build
+echo "URI=https://paste.example.com" >> .env
+docker compose up
 ```
 Without compose:
 ```
-docker build --pull -t local/pastebin .
-docker run --init -p 127.0.0.1:8000:8000 -v /var/lib/pastebin.db:/pastebin.db local/pastebin --ui-line-numbers --address=0.0.0.0 --uri=https://paste.example.com
+mkdir -p /var/lib/pastebin.db && chown -R 820:820 /var/lib/pastebin.db
+docker run --init -p 127.0.0.1:8000:8000 -v /var/lib/pastebin.db:/pastebin.db gavtroy/pastebin --ui-line-numbers --address=0.0.0.0 --uri=https://paste.example.com
 ```
 This example would make Pastebin available on port 8000 on the local machine. Nginx could then be used to proxy to port 80 externally while adding TLS and compression.
 

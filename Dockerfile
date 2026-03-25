@@ -12,6 +12,9 @@ COPY --from=builder /usr/local/cargo/bin/pastebin /usr/local/bin/pastebin
 
 RUN apt-get update && apt-get install -y adduser
 RUN adduser --system --uid 820 --group pastebin
+RUN mkdir /pastebin.db && chown pastebin:pastebin /pastebin.db
+
+VOLUME /pastebin.db
 
 USER pastebin
 
