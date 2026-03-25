@@ -4,8 +4,8 @@ use crate::plugins::plugin::PastebinPlugin;
 
 pub fn new<'r>() -> PastebinPlugin<'r> {
     PastebinPlugin {
-        css_imports: vec!["/static/prism.css"],
-        js_imports: vec!["/static/prism.js"],
+        css_imports: vec![concat!("/static/prism.css?v", env!("CARGO_PKG_VERSION"))],
+        js_imports: vec![concat!("/static/prism.js?v", env!("CARGO_PKG_VERSION"))],
         js_init: Some(
             "var holder = $('#pastebin-code-block:first').get(0); \
             if (holder) { Prism.highlightElement(holder); }",
