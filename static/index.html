@@ -304,9 +304,7 @@
             {{/if}}
 
             {{#if is_editable}}
-            <div class="form-group">
-                <textarea autofocus class="form-control shadow-none" id="content-textarea" rows="35">{{pastebin_code}}</textarea>
-            </div>
+            <textarea autofocus class="form-control shadow-none" id="content-textarea" rows="5">{{pastebin_code}}</textarea>
             {{/if}}
             {{#if is_created or is_clone}}
             <pre id="L" class="lang linkable-line-numbers diff-highlight"><code id="pastebin-code-block" class="{{pastebin_cls}}">{{pastebin_code}}</code></pre>
