@@ -124,6 +124,7 @@ pre.lang {
 	padding: 0 !important;
 	margin: 0.5em 0 !important;
 	outline: none !important;
+	overflow: visible !important;
 }
 pre.lang:before,
 pre.lang:after {

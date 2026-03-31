@@ -396,7 +396,7 @@ async fn create(
         &id,
         db,
         &mut paste.open(2.megabytes()),
-        lang.unwrap_or_else(|| String::from("markup")),
+        lang.unwrap_or_else(|| String::from("log")),
         ttl.unwrap_or(cfg.ttl),
         burn.unwrap_or(false),
         encrypted.unwrap_or(false),
@@ -586,7 +586,7 @@ async fn get_new<'r>(
                 map["is_encrypted"] = json!("true");
             }
 
-            map["pastebin_code"] = json!(std::str::from_utf8(entry.data().unwrap().bytes()).unwrap());
+            map["pastebin_code"] = json!(String::from_utf8_lossy(entry.data().unwrap().bytes()));
         });
     }
 
