@@ -511,7 +511,7 @@ async fn get<'r>(
         let mut timeto = timeago::Formatter::new();
         timeto.ago("");
         let now_timestamp = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs();
-        let dur = Duration::from_secs(entry.expiry_timestamp() - now_timestamp);
+        let dur = Duration::from_secs(entry.expiry_timestamp().saturating_sub(now_timestamp));
         let time = DateTime::from_timestamp(entry.expiry_timestamp() as i64, 0).unwrap();
         map["expiry"] = json!(format!("Expires in {}", timeto.convert(dur)));
         map["expiry_title"] = json!(format!("Paste expires at {}", time.format("%Y-%m-%d %H:%M:%S")));
@@ -722,12 +722,10 @@ fn rocket(pastebin_config: PastebinConfig) -> rocket::Rocket<rocket::Build> {
     }
 
     // setup db
-
-    let db = Arc::new(DB::open_default(pastebin_config.db_path.clone()).unwrap());
     let mut db_opts = Options::default();
-
     db_opts.create_if_missing(true);
     db_opts.set_compaction_filter("ttl_entries", compaction_filter_expired_entries);
+    let db = Arc::new(DB::open(&db_opts, &pastebin_config.db_path).unwrap());
 
     // define slug URL alphabet
     let alphabet = {

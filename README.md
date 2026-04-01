@@ -1,24 +1,23 @@
 # Pastebin
 Simple, fast, standalone pastebin service.
 
-## Notes on this repo / version
+## Notes on this forked version
 
-* Dependency bumps (incl. Rocket 0.5) and as a result the build is fixed
 * Various UI changes
     * Dark theme (and a softer Light theme)
     * Pastes are directly opened after creation
-    * Expiry is shown more discreetly and in human friendly form
+    * Expiry is shown more neatly and in human friendly form
     * Text wrapping
     * Diff highlighting
     * Line linking
     * Passwordless encryption (or optionally with a password)
 * Encryption reworked to use Web Crypto API and URI fragments
 * Pastes are cookie protected and can only be removed by the creator
-* & smaller changes
+* \+ miscellaneous small changes and divergences
 
-Database compatible with `mkaczanowski/pastebin` but `chown -R 820:820` if migrating. If reverting you will not be able to decrypt pastes that were encrypted with this fork.
+The general database format is compatible with `mkaczanowski/pastebin` but encrypted pastes are not cross-compatible.
 
-## Why?
+## Original Introduction
 Whenever you need to share a code snippet, diff, logs, or a secret with another human being, the Pastebin service is invaluable. However, using public services such as [pastebin.com](https://pastebin.com), [privnote.com](https://privnote.com), etc. should be avoided when you're sharing data that should be available only for a selected audience (i.e., your company, private network). Instead of trusting external providers, you could host your own Pastebin service and take ownership of all your data!
 
 **There are numerous [Pastebin implementations](https://github.com/awesome-selfhosted/awesome-selfhosted#pastebins) out there, why would you implement another one?**
@@ -59,9 +58,7 @@ Currently supported:
 * [prism.js](https://prismjs.com/)
 * [mermaid.js](https://github.com/mermaid-js/mermaid)
 
-
 ## Usage
-Browsers will only allow the Encrypt feature if a secure connection is used. It is most convenient to manage TLS certs with a reverse proxy such as nginx, though --tls-certs and --tls-key options are also available.
 
 ### Cargo
 The rocksdb dependency requires the `clang` compiler library (and a few minutes of compilation time).
@@ -70,17 +67,17 @@ cargo build --release
 cargo run
 ```
 ### Docker
-Compose:
+Compose with [docker-compose.yml](https://github.com/gavtroy/pastebin/blob/master/docker-compose.yml):
 ```
 echo "URI=https://paste.example.com" >> .env
 docker compose up
 ```
-Without compose:
+Or without compose:
 ```
 mkdir -p /var/lib/pastebin.db && chown -R 820:820 /var/lib/pastebin.db
 docker run --init -p 127.0.0.1:8000:8000 -v /var/lib/pastebin.db:/pastebin.db gavtroy/pastebin --ui-line-numbers --address=0.0.0.0 --uri=https://paste.example.com
 ```
-This example would make Pastebin available on port 8000 on the local machine. Nginx could then be used to proxy to port 80 externally while adding TLS and compression.
+This makes Pastebin available on port 8000 on the local machine. Nginx/Caddy/etc. should be used to proxy to port 443 externally while adding TLS. Browsers will only allow the Encrypt feature if a secure connection is used.
 
 ### Client
 ```
