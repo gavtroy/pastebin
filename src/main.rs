@@ -17,8 +17,8 @@ extern crate ubyte;
 mod formatter;
 
 #[macro_use]
-mod lib;
-use lib::{DB, compaction_filter_expired_entries, get_entry_data, get_extension, get_ext_from_lang, new_entry, have_auth_token};
+mod util;
+use util::{DB, compaction_filter_expired_entries, get_entry_data, get_extension, get_ext_from_lang, new_entry, have_auth_token};
 
 mod plugins;
 use plugins::plugin::{Plugin, PluginManager};
