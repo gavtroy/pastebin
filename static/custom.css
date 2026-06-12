@@ -17,6 +17,10 @@
     --color-text: #bbb;
   }
 
+  .navbar.bg-dark {
+    background: #2e2f38 !important;
+  }
+
   .navbar-brand {
     color: var(--color-text) !important;
   }
@@ -38,7 +42,7 @@
   }
 
   .form-control:disabled {
-	background: #363636 !important;
+	background: #2d2d2d !important;
   }
 
   .modal-content {

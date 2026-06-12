@@ -72,7 +72,7 @@ pre[class*="language-"] {
 }
 
 .token.comment {
-	color: #616161;
+	color: #888;
 }
 
 .token.punctuation {
@@ -228,13 +228,12 @@ pre > code.diff-highlight .token.deleted:not(.prefix) *::selection {
 
 pre.diff-highlight > code .token.inserted:not(.prefix),
 pre > code.diff-highlight .token.inserted:not(.prefix) {
-    background-color: lch(17 18 142);
+    background-color: lch(17 18 137);
 }
 
 pre.diff-highlight > code .token.inserted:not(.prefix)::selection,
 pre.diff-highlight > code .token.inserted:not(.prefix) *::selection,
 pre > code.diff-highlight .token.inserted:not(.prefix)::selection,
 pre > code.diff-highlight .token.inserted:not(.prefix) *::selection {
-    background-color: lch(23 18 142);
+    background-color: lch(23 18 137);
 }
-
