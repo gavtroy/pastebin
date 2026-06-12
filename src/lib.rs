@@ -13,7 +13,7 @@ use rocksdb::{compaction_filter, DBWithThreadMode};
 pub type DB = DBWithThreadMode<rocksdb::SingleThreaded>;
 
 use sha2::Sha256;
-use hmac::{Hmac, Mac};
+use hmac::{Hmac, KeyInit, Mac};
 
 type HmacSha256 = Hmac<Sha256>;
 
