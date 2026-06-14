@@ -208,14 +208,15 @@ pre[class*="language-"] {
 
 /* Diff Highlight plugin overrides */
 .token.deleted {
-	color: #9c3b22;
+	color: #f4886d;
 }
 .token.inserted {
-    color: #507f3c;
+	color: #89bd73;
 }
 
 pre.diff-highlight > code .token.deleted:not(.prefix),
-pre > code.diff-highlight .token.deleted:not(.prefix) {
+pre > code.diff-highlight .token.deleted:not(.prefix),
+.token.prefix.deleted::before {
     background-color: lch(14 14 23);
 }
 
@@ -227,7 +228,8 @@ pre > code.diff-highlight .token.deleted:not(.prefix) *::selection {
 }
 
 pre.diff-highlight > code .token.inserted:not(.prefix),
-pre > code.diff-highlight .token.inserted:not(.prefix) {
+pre > code.diff-highlight .token.inserted:not(.prefix),
+.token.prefix.inserted::before {
     background-color: lch(17 18 137);
 }
 
@@ -236,4 +238,12 @@ pre.diff-highlight > code .token.inserted:not(.prefix) *::selection,
 pre > code.diff-highlight .token.inserted:not(.prefix)::selection,
 pre > code.diff-highlight .token.inserted:not(.prefix) *::selection {
     background-color: lch(23 18 137);
+}
+
+.token.prefix.inserted::before,
+.token.prefix.deleted::before {
+    content: " ";
+    display: inline-block;
+    width: 5px;
+    margin-left: -5px;
 }

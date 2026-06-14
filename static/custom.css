@@ -153,3 +153,9 @@ pre.lang:after {
 	z-index: 5;
 	scroll-margin-top: 200px;
 }
+
+@media (min-width: 768px) {
+  .input-group {
+	max-width: 250px;
+  }
+}
